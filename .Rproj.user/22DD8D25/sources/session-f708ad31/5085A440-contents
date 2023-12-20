@@ -1,0 +1,73 @@
+
+
+
+# Technology factors
+
+tech_list <- c("Black Coal",
+               "Brown Coal",
+               "Mid-merit Gas",
+               "Mid-merit Gas with CCS",
+               "Flexible Gas",
+               "Hydrogen Turbine",
+               "Hydro",
+               "Biomass",
+               "Utility-scale Storage",
+               "Coordinated CER Storage",
+               "Passive CER Storage",
+               "Solar Thermal",
+               "Offshore Wind",
+               "Wind",
+               "Utility-scale Solar",
+               "Distributed PV",
+               "DSP")
+
+
+colour_list <- c("#373A36",  # Black coal
+                 "#94795D",  # Brown coal
+                 "#008578",  # Mid-merit gas
+                 "#00594F",  # Mid-merit gas with CCS
+                 "#40C1AC",  # Flexible gas
+                 "#FF6666",  # Hydrogen turbine
+                 "#A4DBE8",  # Hydro
+                 "#B38210",  # Biomass
+                 "#77C5D5",  # Utility scale storage
+                 "#A3519B",  # Coordinated CER storage
+                 "#DD9CDE",  # Passive CER storage
+                 "#FCB71C",  # Solar thermal
+                 "#238DAA",  # Offshore wind
+                 "#A1D884",  # Wind
+                 "#FDD26E",  # Utility scale Solar
+                 "#F8E08E",  # Distributed PV
+                 "#606EB2")  # DSP - Demand Side Participation
+
+
+dispatch_list <- c(TRUE,
+                   TRUE,
+                   TRUE,
+                   TRUE,
+                   TRUE,
+                   TRUE,
+                   TRUE,
+                   TRUE,
+                   TRUE,
+                   TRUE,
+                   FALSE,
+                   FALSE,
+                   FALSE,
+                   FALSE,
+                   FALSE,
+                   FALSE,
+                   TRUE)
+
+
+
+util_table <- bind_cols(tech_list,
+                        colour_list,
+                        dispatch_list) |> 
+  rename("technology" = "...1",
+         "colour_label" = "...2",
+         "dispatchable" = "...3")
+
+
+
+
