@@ -138,7 +138,7 @@ isp_storage_output <- bind_rows(step_change_data,
 
 # Clean up
 
-rm(export_data, progressive_change_data, step_change_data, raw)
+rm(export_data, progressive_change_data, step_change_data)
 
 
 

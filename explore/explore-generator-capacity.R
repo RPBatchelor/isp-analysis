@@ -44,7 +44,7 @@ p4 <- isp_generator_capacity |>
   scale_y_continuous(labels = label_number(scale = 1e-3)) +
   scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) + 
   labs(fill = "Technology",
-       title = glue("{region_name} generator capacity"),
+       title = glue("NEM generator capacity"),
        subtitle = glue("{isp_scenario} scenario"),
        caption = "Source: Draft ISP 2024",
        x = "Year",

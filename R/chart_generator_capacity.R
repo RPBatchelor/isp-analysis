@@ -5,7 +5,6 @@ chart_generator_capacity <- function(cdp_scenario,
                                      region_name,
                                      isp_scenario){
   
-  stopifnot(region %in% unique(isp_generator_capacity$region))
   stopifnot(cdp_scenario %in% unique(isp_generator_capacity$cdp))
   stopifnot(isp_scenario %in% unique(isp_generator_capacity$scenario))
   
@@ -20,6 +19,8 @@ chart_generator_capacity <- function(cdp_scenario,
       mutate(region = "NEM")
     
   } else {
+    
+    stopifnot(region_name %in% unique(isp_generator_capacity$region))
     
     data <- isp_generator_capacity |> 
       filter(region == region_name,
@@ -50,7 +51,7 @@ chart_generator_capacity <- function(cdp_scenario,
          y = "Capacity (GW)") +
     theme_minimal() +
     theme(panel.grid.major.y = element_blank(),
-          panel.grid.minor.y = element_line(color = "gray", size = 0.1)
+          panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
           panel.grid.minor.x = element_blank(),
           panel.grid.major.x = element_blank(),
           panel.background = element_rect(fill = "white"),
