@@ -18,3 +18,4 @@ run_all_r_scripts("R", cleanup = FALSE)
 
 
 #----- 2. PROCESSING -----------------------------------------------------------
+run_all_r_scripts("processing", cleanup = FALSE)
