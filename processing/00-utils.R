@@ -3,23 +3,24 @@
 
 # Technology factors
 
-tech_list <- c("Black Coal",
-               "Brown Coal",
-               "Mid-merit Gas",
-               "Mid-merit Gas with CCS",
-               "Flexible Gas",
-               "Hydrogen Turbine",
-               "Hydro",
-               "Biomass",
-               "Utility-scale Storage",
-               "DSP",
-               "Coordinated CER Storage",
-               "Passive CER Storage",
-               "Solar Thermal",
-               "Offshore Wind",
-               "Wind",
-               "Utility-scale Solar",
-               "Distributed PV")
+tech_list <- c("black coal",
+               "brown coal",
+               "mid-merit gas",
+               "mid-merit gas with ccs",
+               "flexible gas",
+               "flexible gas with ccs",
+               "hydrogen turbine",
+               "hydro",
+               "biomass",
+               "utility-scale storage",
+               "dsp",
+               "coordinated cer storage",
+               "passive cer storage",
+               "solar thermal",
+               "offshore wind",
+               "wind",
+               "utility-scale solar",
+               "distributed pv")
 
 
 colour_list <- c("#373A36",  # Black coal
@@ -27,6 +28,7 @@ colour_list <- c("#373A36",  # Black coal
                  "#008578",  # Mid-merit gas
                  "#00594F",  # Mid-merit gas with CCS
                  "#40C1AC",  # Flexible gas
+                 "#0E6659",  # Flexible gas with CCS
                  "#FF6666",  # Hydrogen turbine
                  "#A4DBE8",  # Hydro
                  "#B38210",  # Biomass

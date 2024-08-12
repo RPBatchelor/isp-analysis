@@ -143,14 +143,23 @@ combined_2022_final <- bind_rows(all_data) |>
 # Combine all data
 isp_generator_capacity <- bind_rows(combined_2022_final,
                                        combined_2024_draft,
-                                       combined_2024_final)
+                                       combined_2024_final) %>% 
+  mutate(technology = str_to_lower(technology)) %>% 
+mutate(technology = case_when(technology == "coordinated der storage" ~ "coordinated cer storage",
+                              technology == "utility solar" ~ "utility-scale solar",
+                              technology == "utility storage" ~"utility-scale storage",
+                              .default = technology))
 
 
 
 
 
 
-
+overlaps <- isp_generator_capacity |> 
+  distinct(technology) |> 
+  pull(technology) |> 
+  as_tibble() |> 
+  left_join(util_table, by = c("value" = "technology"))
 
 
 
