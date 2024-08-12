@@ -4,7 +4,8 @@
 
 p1 <- chart_generator_capacity(cdp_scenario = "CDP11 (ODP)",
                                region_name = "VIC",
-                               isp_scenario = "step_change")
+                               isp_scenario = "step change",
+                               isp_source = "ISP 2024 - Final")
 
 p1
 

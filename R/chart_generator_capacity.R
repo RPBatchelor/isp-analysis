@@ -3,7 +3,8 @@
 
 chart_generator_capacity <- function(cdp_scenario,
                                      region_name,
-                                     isp_scenario){
+                                     isp_scenario,
+                                     isp_source){
   
   stopifnot(cdp_scenario %in% unique(isp_generator_capacity$cdp))
   stopifnot(isp_scenario %in% unique(isp_generator_capacity$scenario))
@@ -12,7 +13,8 @@ chart_generator_capacity <- function(cdp_scenario,
     
     data <- isp_generator_capacity |> 
       filter(cdp == cdp_scenario,
-             scenario == isp_scenario) |> 
+             scenario == isp_scenario,
+             source == isp_source) |> 
       group_by(technology, year) |> 
       summarise(value = sum(value)) |> 
       ungroup() |> 
@@ -25,7 +27,8 @@ chart_generator_capacity <- function(cdp_scenario,
     data <- isp_generator_capacity |> 
       filter(region == region_name,
              cdp == cdp_scenario,
-             scenario == isp_scenario)
+             scenario == isp_scenario,
+             source == isp_source)
   }
   
   p <- data |> 
