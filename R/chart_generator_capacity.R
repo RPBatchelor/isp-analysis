@@ -8,6 +8,7 @@ chart_generator_capacity <- function(cdp_scenario,
   
   stopifnot(cdp_scenario %in% unique(isp_generator_capacity$cdp))
   stopifnot(isp_scenario %in% unique(isp_generator_capacity$scenario))
+  stopifnot(isp_source %in% unique(isp_generator_capacity$source))
   
   if(region_name == "NEM"){
     
@@ -15,7 +16,7 @@ chart_generator_capacity <- function(cdp_scenario,
       filter(cdp == cdp_scenario,
              scenario == isp_scenario,
              source == isp_source) |> 
-      group_by(technology, year) |> 
+      group_by(technology, year, year_ending) |> 
       summarise(value = sum(value)) |> 
       ungroup() |> 
       mutate(region = "NEM")
@@ -28,12 +29,12 @@ chart_generator_capacity <- function(cdp_scenario,
       filter(region == region_name,
              cdp == cdp_scenario,
              scenario == isp_scenario,
-             source == isp_source)
+             source == isp_source) 
   }
   
   p <- data |> 
     left_join(util_table, by = c("technology" = "technology")) |> 
-    mutate(technology = factor(technology, levels = tech_list)) |> 
+    mutate(technology = factor(technology, levels = util_table$technology)) |> 
     ggplot() + 
     geom_bar(aes(x = year, 
                  y = value, 
@@ -49,8 +50,8 @@ chart_generator_capacity <- function(cdp_scenario,
     labs(fill = "Technology",
          title = glue("{region_name} generator capacity"),
          subtitle = glue("{isp_scenario} scenario"),
-         caption = "Source: Draft ISP 2024",
-         x = "Year",
+         caption = glue("Source: {isp_source}"),
+         x = "Year (financial year ending 30-jun-YYYY)",
          y = "Capacity (GW)") +
     theme_minimal() +
     theme(panel.grid.major.y = element_blank(),
@@ -58,7 +59,8 @@ chart_generator_capacity <- function(cdp_scenario,
           panel.grid.minor.x = element_blank(),
           panel.grid.major.x = element_blank(),
           panel.background = element_rect(fill = "white"),
-          plot.background = element_rect(fill = "white"))
+          plot.background = element_rect(fill = "white"),
+          axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
   
   return(p)
   

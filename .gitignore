@@ -6,3 +6,6 @@
 .Ruserdata
 .Renviron
 
+
+*.xlsx
+*.xls

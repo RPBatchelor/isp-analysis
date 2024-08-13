@@ -66,16 +66,42 @@ dispatch_list <- c(TRUE,  # Black coal
                    FALSE, # Utilitiy scale solar
                    FALSE, # Distributed PV
                    TRUE,  # Peaking gas+liquids
-                   FALSE) # Other renewable fules
+                   FALSE) # Other renewable fuels
+
+
+tech_type_list <- c("coal",      # Black coal
+                    "coal",      # Brown coal
+                    "gas",       # Mid merit gas
+                    "gas",       # Mid merit gas with CCS
+                    "gas",       # Flexible gas
+                    "gas",       # Flexible gas with CCS
+                    "gas",       # Hydrogen turbine
+                    "renewable", # Hydro
+                    "renewable", # Biomass
+                    "storage",   # Utility scale storage
+                    "dsp",       # DSP - Demand side participation
+                    "storage",   # Coordinated CER storage
+                    "storage",   # Passive CER storage
+                    "renewable", # Solar thermal
+                    "renewable", # Offshore wind
+                    "renewable", # Wind
+                    "renewable", # Utilitiy scale solar
+                    "renewable", # Distributed PV
+                    "gas",       # Peaking gas+liquids
+                    "renewable") # Other renewable fuels
 
 
 
 util_table <- bind_cols(tech_list,
                         colour_list,
-                        dispatch_list) |> 
+                        dispatch_list,
+                        tech_type_list) |> 
   rename("technology" = "...1",
          "colour_label" = "...2",
-         "dispatchable" = "...3")
+         "dispatchable" = "...3",
+         "tech_type_cgr" = "...4")
 
 
+
+rm(tech_list, tech_type_list, dispatch_list, colour_list)
 
