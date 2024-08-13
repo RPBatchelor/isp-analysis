@@ -20,7 +20,9 @@ tech_list <- c("black coal",
                "offshore wind",
                "wind",
                "utility-scale solar",
-               "distributed pv")
+               "distributed pv",
+               "peaking gas+liquids",
+               "other renewable fuels")
 
 
 colour_list <- c("#373A36",  # Black coal
@@ -40,26 +42,31 @@ colour_list <- c("#373A36",  # Black coal
                  "#238DAA",  # Offshore wind
                  "#A1D884",  # Wind
                  "#FDD26E",  # Utility scale Solar
-                 "#F8E08E")  # Distributed PV  
+                 "#F8E08E",  # Distributed PV
+                 "#3FB9C4",  # Peaking gas+liquids 
+                 "#5E8A48")   # Other renewable fuels 
 
 
-dispatch_list <- c(TRUE,
-                   TRUE,
-                   TRUE,
-                   TRUE,
-                   TRUE,
-                   TRUE,
-                   TRUE,
-                   TRUE,
-                   TRUE,
-                   TRUE,
-                   TRUE,
-                   FALSE,
-                   FALSE,
-                   FALSE,
-                   FALSE,
-                   FALSE,
-                   FALSE)
+dispatch_list <- c(TRUE,  # Black coal
+                   TRUE,  # Brown coal
+                   TRUE,  # Mid merit gas
+                   TRUE,  # Mid merit gas with CCS
+                   TRUE,  # Flexible gas
+                   TRUE,  # Flexible gas with CCS
+                   TRUE,  # Hydrogen turbine
+                   TRUE,  # Hydro
+                   TRUE,  # Biomass
+                   TRUE,  # Utility scale storage
+                   TRUE,  # DSP - Demand side participation
+                   TRUE,  # Coordinated CER storage
+                   FALSE, # Passive CER storage
+                   FALSE, # Solar thermal
+                   FALSE, # Offshore wind
+                   FALSE, # Wind
+                   FALSE, # Utilitiy scale solar
+                   FALSE, # Distributed PV
+                   TRUE,  # Peaking gas+liquids
+                   FALSE) # Other renewable fules
 
 
 

@@ -148,6 +148,7 @@ isp_generator_capacity <- bind_rows(combined_2022_final,
 mutate(technology = case_when(technology == "coordinated der storage" ~ "coordinated cer storage",
                               technology == "utility solar" ~ "utility-scale solar",
                               technology == "utility storage" ~"utility-scale storage",
+                              technology == "distributed storage" ~ "passive cer storage",
                               .default = technology))
 
 
@@ -160,6 +161,21 @@ overlaps <- isp_generator_capacity |>
   pull(technology) |> 
   as_tibble() |> 
   left_join(util_table, by = c("value" = "technology"))
+
+
+
+isp_generator_capacity |> 
+  filter(technology == "other renewable fuels") |> view()
+
+
+
+
+
+
+
+
+
+
 
 
 
