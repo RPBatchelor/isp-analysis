@@ -137,6 +137,8 @@ isp_generator_capacity <- bind_rows(combined_2022_final,
 
 
 save(isp_generator_capacity, file = "shiny-webtool/data/isp_generator_capacity.rda", compress = "xz")
+write_csv(isp_generator_capacity,
+          file = "data/isp_generator_capacity.csv")
 
 rm(combined_2022_final, combined_2024_draft, combined_2024_final, all_data)
 rm(list_files)
@@ -236,65 +238,65 @@ rm(list_files)
 
 
 
-
-
-# Read in storage capacity
-step_change_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Step Change.xlsx",
-                                                 sheet = "Storage Capacity",
-                                                 range = "A3:AE610",
-                                                 scenario = "step_change",
-                                                 output_unit = "MW")
-
-progressive_change_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Progressive Change.xlsx",
-                                                        sheet = "Storage Capacity",
-                                                        range = "A3:AE610",
-                                                        scenario = "progressive_change",
-                                                        output_unit = "MW")
-
-export_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Green Energy Exports.xlsx",
-                                            sheet = "Storage Capacity",
-                                            range = "A3:AE610",
-                                            scenario = "green_energy_exports",
-                                            output_unit = "MW")
-
-
-isp_storage_capacity <- bind_rows(step_change_data, 
-                                  progressive_change_data,
-                                  export_data)
-
-
-
-
-# Read in storage output
-step_change_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Step Change.xlsx",
-                                                 sheet = "Storage Energy",
-                                                 range = "A3:AE610",
-                                                 scenario = "step_change",
-                                                 output_unit = "GWh")
-
-progressive_change_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Progressive Change.xlsx",
-                                                        sheet = "Storage Energy",
-                                                        range = "A3:AE610",
-                                                        scenario = "progressive_change",
-                                                        output_unit = "GWh")
-
-export_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Green Energy Exports.xlsx",
-                                            sheet = "Storage Energy",
-                                            range = "A3:AE610",
-                                            scenario = "green_energy_exports",
-                                            output_unit = "GWh")
-
-
-isp_storage_output <- bind_rows(step_change_data, 
-                                progressive_change_data,
-                                export_data)
-
-
-
-
-# Clean up
-
-rm(export_data, progressive_change_data, step_change_data)
+# 
+# 
+# # Read in storage capacity
+# step_change_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Step Change.xlsx",
+#                                                  sheet = "Storage Capacity",
+#                                                  range = "A3:AE610",
+#                                                  scenario = "step_change",
+#                                                  output_unit = "MW")
+# 
+# progressive_change_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Progressive Change.xlsx",
+#                                                         sheet = "Storage Capacity",
+#                                                         range = "A3:AE610",
+#                                                         scenario = "progressive_change",
+#                                                         output_unit = "MW")
+# 
+# export_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Green Energy Exports.xlsx",
+#                                             sheet = "Storage Capacity",
+#                                             range = "A3:AE610",
+#                                             scenario = "green_energy_exports",
+#                                             output_unit = "MW")
+# 
+# 
+# isp_storage_capacity <- bind_rows(step_change_data, 
+#                                   progressive_change_data,
+#                                   export_data)
+# 
+# 
+# 
+# 
+# # Read in storage output
+# step_change_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Step Change.xlsx",
+#                                                  sheet = "Storage Energy",
+#                                                  range = "A3:AE610",
+#                                                  scenario = "step_change",
+#                                                  output_unit = "GWh")
+# 
+# progressive_change_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Progressive Change.xlsx",
+#                                                         sheet = "Storage Energy",
+#                                                         range = "A3:AE610",
+#                                                         scenario = "progressive_change",
+#                                                         output_unit = "GWh")
+# 
+# export_data <- read_isp_capacity_generation(path = "raw-data/2024 Draft ISP results workbook - Green Energy Exports.xlsx",
+#                                             sheet = "Storage Energy",
+#                                             range = "A3:AE610",
+#                                             scenario = "green_energy_exports",
+#                                             output_unit = "GWh")
+# 
+# 
+# isp_storage_output <- bind_rows(step_change_data, 
+#                                 progressive_change_data,
+#                                 export_data)
+# 
+# 
+# 
+# 
+# # Clean up
+# 
+# rm(export_data, progressive_change_data, step_change_data)
 
 
 
