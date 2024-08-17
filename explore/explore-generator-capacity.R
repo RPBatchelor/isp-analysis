@@ -1,5 +1,73 @@
 
 
+# View 2024 final data
+
+cdps <- isp_generator_capacity |> 
+  distinct(source, cdp)
+
+p1 <- chart_generator_capacity(isp_source = "2024_final",
+                               isp_scenario = "step change",
+                               cdp_scenario = "cdp14",
+                               region_name = "NEM",
+                               dispatchable = T)
+p1
+
+ggplotly(p1)
+
+
+
+gwalkr(isp_generator_capacity)
+
+
+
+
+data <- isp_generator_capacity |> 
+  filter(source %in% c("2024_final", "2022_final", "2020_final")) |> 
+  mutate(year_scenario = str_extract(source, "\\d{4}"),
+         year_scenario = paste0(year_scenario, "_", scenario)) |> 
+  filter(year_scenario %in% c("2024_step change", "2022_step change", 
+                              "2020_step change", "2020_central", "2020_slow change", "2020_fast change")) |> 
+  left_join(odp_table, by = c("source" = "isp_source")) |> 
+  filter(cdp == odp,
+         year <= 2030) |>
+  left_join(util_table, by = c("technology" = "technology")) |>
+  filter(tech_type_cgr %in% c("renewable", "storage")) |> 
+  group_by(year, year_scenario) |> 
+  summarise(value = sum(value)) |>
+  ungroup() 
+
+
+
+p2 <- data |> 
+  ggplot()+ 
+  geom_line(aes(x = year, y = value / 1000, colour = year_scenario),
+            size = 1.2) + 
+  labs(x = "year",
+       y = "capacity (mw)")
+
+p2
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
 
 
 p1 <- chart_generator_capacity(cdp_scenario = "CDP11",

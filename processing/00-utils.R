@@ -9,6 +9,7 @@ tech_list <- c("black coal",
                "mid-merit gas with ccs",
                "flexible gas",
                "flexible gas with ccs",
+               "other renewable fuels",
                "hydrogen turbine",
                "hydro",
                "biomass",
@@ -21,8 +22,7 @@ tech_list <- c("black coal",
                "wind",
                "utility-scale solar",
                "distributed pv",
-               "peaking gas+liquids",
-               "other renewable fuels")
+               "peaking gas+liquids")
 
 
 colour_list <- c("#373A36",  # Black coal
@@ -31,6 +31,7 @@ colour_list <- c("#373A36",  # Black coal
                  "#00594F",  # Mid-merit gas with CCS
                  "#40C1AC",  # Flexible gas
                  "#0E6659",  # Flexible gas with CCS
+                 "#B38210",  # other renewable fuels
                  "#FF6666",  # Hydrogen turbine
                  "#A4DBE8",  # Hydro
                  "#B38210",  # Biomass
@@ -43,8 +44,7 @@ colour_list <- c("#373A36",  # Black coal
                  "#A1D884",  # Wind
                  "#FDD26E",  # Utility scale Solar
                  "#F8E08E",  # Distributed PV
-                 "#3FB9C4",  # Peaking gas+liquids 
-                 "#5E8A48")   # Other renewable fuels 
+                 "#3FB9C4")  # Peaking gas+liquids    
 
 
 dispatch_list <- c(TRUE,  # Black coal
@@ -53,6 +53,7 @@ dispatch_list <- c(TRUE,  # Black coal
                    TRUE,  # Mid merit gas with CCS
                    TRUE,  # Flexible gas
                    TRUE,  # Flexible gas with CCS
+                   TRUE,  # Other RE fuels
                    TRUE,  # Hydrogen turbine
                    TRUE,  # Hydro
                    TRUE,  # Biomass
@@ -63,10 +64,9 @@ dispatch_list <- c(TRUE,  # Black coal
                    FALSE, # Solar thermal
                    FALSE, # Offshore wind
                    FALSE, # Wind
-                   FALSE, # Utilitiy scale solar
+                   FALSE, # Utility scale solar
                    FALSE, # Distributed PV
-                   TRUE,  # Peaking gas+liquids
-                   FALSE) # Other renewable fuels
+                   TRUE)  # Peaking gas+liquids 
 
 
 tech_type_list <- c("coal",      # Black coal
@@ -75,6 +75,7 @@ tech_type_list <- c("coal",      # Black coal
                     "gas",       # Mid merit gas with CCS
                     "gas",       # Flexible gas
                     "gas",       # Flexible gas with CCS
+                    "renewable", # OTher RE fuesl
                     "gas",       # Hydrogen turbine
                     "renewable", # Hydro
                     "renewable", # Biomass
@@ -87,8 +88,7 @@ tech_type_list <- c("coal",      # Black coal
                     "renewable", # Wind
                     "renewable", # Utilitiy scale solar
                     "renewable", # Distributed PV
-                    "gas",       # Peaking gas+liquids
-                    "renewable") # Other renewable fuels
+                    "gas")       # Peaking gas+liquids
 
 
 
@@ -103,5 +103,34 @@ util_table <- bind_cols(tech_list,
 
 
 
+
+
+isp_list <- c("2018_final",
+              "2020_final",
+              "2022_final",
+              "2024_final")
+
+odp_list <- list <- c("default",
+                 "dp1",
+                 "cdp8",
+                 "cdp14")
+
+scenario_list <- c("neutral scenario",
+              "central",
+              "step change",
+              "step change")
+
+
+odp_table <- bind_cols(isp_list,
+                       odp_list,
+                       scenario_list) |> 
+  rename("isp_source" = "...1",
+         "odp" = "...2",
+         "scenario" = "...3")
+
+
+
+
 rm(tech_list, tech_type_list, dispatch_list, colour_list)
+rm(isp_list, odp_list, scenario_list)
 

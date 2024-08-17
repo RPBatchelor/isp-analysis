@@ -2,9 +2,10 @@
 
 
 chart_generator_capacity <- function(cdp_scenario,
-                                     region_name,
+                                     region_name = "NEM",
                                      isp_scenario,
-                                     isp_source){
+                                     isp_source,
+                                     dispatchable = F){
   
   stopifnot(cdp_scenario %in% unique(isp_generator_capacity$cdp))
   stopifnot(isp_scenario %in% unique(isp_generator_capacity$scenario))
@@ -62,6 +63,59 @@ chart_generator_capacity <- function(cdp_scenario,
           plot.background = element_rect(fill = "white"),
           axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
   
+  if(dispatchable == T){
+    series <- data |> 
+      left_join(util_table, by = c("technology" = "technology")) |> 
+      filter(dispatchable == T) |> 
+      group_by(year) |> 
+      summarise(value = sum(value)) |> 
+      ungroup()
+    
+    p <- p +
+      geom_line(data = series,
+                aes(x = year, y = value, linetype = "Dispatchable"), 
+                colour = "red4",
+                size = 0.8) +
+      scale_linetype_manual(name = "Dispatchable", values = c("Dispatchable" = "dashed")) +
+      guides(fill = guide_legend(order =1),
+             linetype = guide_legend(order = 2))
+    
+  }
+  
+  
   return(p)
   
 }
+
+
+
+# 
+# # Create the stacked bar chart
+# p <- ggplot(data, aes(x = category, y = value, fill = type)) +
+#   geom_bar(stat = "identity") +
+#   geom_line(data = data_sum, aes(x = category, y = dispatchable, group = 1, linetype = "Dispatchable"),
+#             color = "black", size = 1) +
+#   scale_fill_brewer(palette = "Set3", name = "Technology") +
+#   scale_linetype_manual(name = "Capacity Type", values = c("Dispatchable" = "dashed")) +
+#   theme_minimal() +
+#   theme(legend.position = "bottom") +  # Position the legend at the bottom
+#   guides(fill = guide_legend(order = 1), # Order the fill legend first
+#          linetype = guide_legend(order = 2))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

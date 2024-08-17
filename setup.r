@@ -14,10 +14,13 @@ library(plotly)
 library(glue)
 library(patchwork)
 library(rvest)
+library(GWalkR)
 
 library(shiny)
 
 
+# Value to test if values are equal
+epsilon <- 1E-5
 
 
 
