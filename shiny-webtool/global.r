@@ -3,6 +3,7 @@
 library(tidyverse)
 library(shiny)
 library(shinydashboard)
+library(shinyWidgets)
 library(bslib)
 library(thematic)
 
@@ -10,8 +11,18 @@ library(thematic)
 
 # -----1. Source useful functions and data ------------------------------------
 
-files <- list.files("R", pattern = "\\.R$", full.names = TRUE)
-for (file in files) { source(file) }
+# Load all the RDA data files
+data_files <- list.files("data", full.names = TRUE, pattern = "\\.rda", all.files = TRUE)
+for (d in data_files){
+  load(d)
+}
 
-# Load the necessary input data
-load("data/isp_generator_capacity.rda")
+# Load all R files
+r_files <- list.files("R", full.names = TRUE, pattern = "\\.[Rr]")
+for (f in r_files){
+  source(f)
+}
+
+
+
+
