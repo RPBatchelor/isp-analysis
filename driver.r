@@ -3,7 +3,7 @@
 # ISP analysis
 # 
 # Ryan Batchelor
-# Date
+# August 2024
 #
 #-------------------------------------------------------------------------------
 
@@ -11,7 +11,7 @@
 # You should be able to run it from a clean clone.
 
 
-#----- 1. LOAD SETUP SCRIPS ----------------------------------------------------
+#----- 1. LOAD SETUP SCRIPTS ---------------------------------------------------
 source("setup.r")
 source("R/run-all-r-scripts.r")
 run_all_r_scripts("R", cleanup = FALSE)
@@ -19,3 +19,13 @@ run_all_r_scripts("R", cleanup = FALSE)
 
 #----- 2. PROCESSING -----------------------------------------------------------
 run_all_r_scripts("processing", cleanup = FALSE)
+
+
+#----- 3. ANALYSIS -------------------------------------------------------------
+
+
+
+#----- 4. SHINY WEBTOOL PREP ---------------------------------------------------
+run_all_r_scripts("prep", cleanup = FALSE)
+
+
