@@ -42,6 +42,11 @@ combined_2024_final <- bind_rows(all_data) |>
   ungroup()
 
 
+# a <- combined_2024_final |> 
+#   filter(region == "NSW",
+#          cdp == "CDP14",
+#          scenario == "progressive change")
+
 
 # 2022 Final
 list_files <- list.files("raw-data/2022_final/Final ISP Results/Scenarios/", pattern = ".xlsx")

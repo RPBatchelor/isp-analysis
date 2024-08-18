@@ -6,9 +6,9 @@ chart_generation_output <- function(cdp_scenario,
                                     isp_scenario,
                                     isp_source){
   
-  stopifnot(cdp_scenario %in% unique(isp_generator_capacity$cdp))
-  stopifnot(isp_scenario %in% unique(isp_generator_capacity$scenario))
-  stopifnot(isp_source %in% unique(isp_generator_capacity$source))
+  stopifnot(cdp_scenario %in% unique(isp_generation_output$cdp))
+  stopifnot(isp_scenario %in% unique(isp_generation_output$scenario))
+  stopifnot(isp_source %in% unique(isp_generation_output$source))
   
   if(region_name == "NEM"){
     
@@ -23,7 +23,7 @@ chart_generation_output <- function(cdp_scenario,
     
   } else {
     
-    stopifnot(region_name %in% unique(isp_generator_capacity$region))
+    stopifnot(region_name %in% unique(isp_generation_output$region))
     
     data <- isp_generation_output |> 
       filter(region == region_name,
@@ -34,25 +34,31 @@ chart_generation_output <- function(cdp_scenario,
   
   p <- data |> 
     left_join(util_table, by = c("technology" = "technology")) |> 
-    mutate(technology = factor(technology, levels = util_table$technology)) |> 
+    mutate(technology = factor(technology, levels = util_table$technology)) |>
+    mutate(gen_load = if_else(str_detect(technology, "load"), 
+                              "load", 
+                              "generation")) |> 
     ggplot() + 
     geom_bar(aes(x = year, 
                  y = value, 
-                 fill = reorder(technology, -as.numeric(technology))),
+                 fill = reorder(technology, -as.numeric(technology)),
+                 alpha = gen_load),
              position = "stack",
              stat = "identity",
              show.legend = TRUE) +
     scale_y_continuous(labels = scales::label_comma()) +
     scale_y_continuous(labels = label_number(scale = 1e-3)) +
     scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) + 
-    scale_x_continuous(breaks = unique(isp_generator_capacity$year),
-                       labels = unique(isp_generator_capacity$year)) +
+    scale_alpha_manual(values = c("generation" = 1, "load" = 0.5)) + # Adjust alpha for load
+    scale_x_continuous(breaks = unique(isp_generation_output$year),
+                       labels = unique(isp_generation_output$year)) +
     labs(fill = "Technology",
-         title = glue("{region_name} generator capacity"),
+         alpha = "Generation / load",
+         title = glue("{region_name} generation output"),
          subtitle = glue("{isp_scenario} scenario"),
          caption = glue("Source: {isp_source}"),
          x = "Year (financial year ending 30-jun-YYYY)",
-         y = "Capacity (GW)") +
+         y = "Output (TWh)") +
     theme_minimal() +
     theme(panel.grid.major.y = element_blank(),
           panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
@@ -66,33 +72,6 @@ chart_generation_output <- function(cdp_scenario,
   return(p)
   
 }
-
-
-
-# 
-# # Create the stacked bar chart
-# p <- ggplot(data, aes(x = category, y = value, fill = type)) +
-#   geom_bar(stat = "identity") +
-#   geom_line(data = data_sum, aes(x = category, y = dispatchable, group = 1, linetype = "Dispatchable"),
-#             color = "black", size = 1) +
-#   scale_fill_brewer(palette = "Set3", name = "Technology") +
-#   scale_linetype_manual(name = "Capacity Type", values = c("Dispatchable" = "dashed")) +
-#   theme_minimal() +
-#   theme(legend.position = "bottom") +  # Position the legend at the bottom
-#   guides(fill = guide_legend(order = 1), # Order the fill legend first
-#          linetype = guide_legend(order = 2))
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

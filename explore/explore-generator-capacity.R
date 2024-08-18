@@ -53,9 +53,80 @@ p2
 
 # View of 2024 generation output
 
-p3 
+p3 <- chart_generation_output(isp_source = "2024_final",
+                              isp_scenario = "step change",
+                              cdp_scenario = "cdp14",
+                              region_name = "NSW")
+
+p3
+
+ggplotly(p3)
 
 
+a <- isp_generation_output |> 
+  filter(source == "2024_final",
+         scenario == "step change",
+         cdp == "cdp14",
+         region == "NSW") |> 
+  left_join(util_table, by = c("technology" = "technology")) |> 
+  mutate(technology = factor(technology, levels = util_table$technology)) |> 
+  mutate(gen_load = if_else(str_detect(technology, "load"), 
+                            "load", 
+                            "generation")) |> 
+  ggplot() +
+  geom_bar(aes(x = year, 
+               y = value,
+               fill = reorder(technology, -as.numeric(technology)),
+               alpha = gen_load),
+           position = "stack",
+           stat = "identity",
+           show.legend = TRUE)+ scale_y_continuous(labels = scales::label_comma()) +
+  scale_y_continuous(labels = label_number(scale = 1e-3)) +
+  scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) + 
+  scale_alpha_manual(values = c("generation" = 1, "load" = 0.5)) + # Adjust alpha for load
+  scale_x_continuous(breaks = unique(isp_generation_output$year),
+                     labels = unique(isp_generation_output$year))
+
+a
+
+
+# Calculate the share of renewables (like the chart)
+
+a <- isp_generation_output |> 
+  filter(source == "2024_final",
+         scenario == "step change",
+         cdp == "cdp14",
+         region == "NSW") |> 
+  left_join(util_table, by = c("technology" = "technology")) |> 
+  mutate(technology = factor(technology, levels = util_table$technology)) |> 
+  mutate(gen_load = if_else(str_detect(technology, "load"), 
+                            "load", 
+                            "generation")) |> 
+  group_by(year) |> 
+  summarise(share_of_re = sum(value[tech_type_cgr == "renewable"]) / 
+              sum(value[tech_type_cgr %in% c("renewable", "coal", "gas")])) |> 
+  ungroup()
+  
+
+
+
+
+
+
+group_by(year) %>%
+  summarise(
+    total_output = sum(output),
+    renewable_output = sum(output[tech_type_cgr == "renewable"]),
+    renewable_percentage = (renewable_output / total_output) * 100
+  )
+
+
+
+isp_generation_output |> 
+  select(source, technology) |>
+  unique() |> 
+  filter(str_detect(technology, "load")) |> 
+  view()
 
 
 

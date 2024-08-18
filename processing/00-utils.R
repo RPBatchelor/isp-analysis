@@ -22,7 +22,10 @@ tech_list <- c("black coal",
                "wind",
                "utility-scale solar",
                "distributed pv",
-               "peaking gas+liquids")
+               "peaking gas+liquids",
+               "utility storage load",
+               "coordinated cer storage load",
+               "passive cer storage load")
 
 
 colour_list <- c("#373A36",  # Black coal
@@ -44,7 +47,10 @@ colour_list <- c("#373A36",  # Black coal
                  "#A1D884",  # Wind
                  "#FDD26E",  # Utility scale Solar
                  "#F8E08E",  # Distributed PV
-                 "#3FB9C4")  # Peaking gas+liquids    
+                 "#3FB9C4",  # Peaking gas+liquids 
+                 "#77C5D5",  # utility storage load
+                 "#A3519B",  # coordinated cer storage load
+                 "#DD9CDE")  # passive cer storage load   
 
 
 dispatch_list <- c(TRUE,  # Black coal
@@ -66,7 +72,10 @@ dispatch_list <- c(TRUE,  # Black coal
                    FALSE, # Wind
                    FALSE, # Utility scale solar
                    FALSE, # Distributed PV
-                   TRUE)  # Peaking gas+liquids 
+                   TRUE,  # Peaking gas+liquids 
+                   TRUE,  # Utility storage load
+                   TRUE,  # Coordinated CER storage load
+                   FALSE) # Passive cer storage load
 
 
 tech_type_list <- c("coal",      # Black coal
@@ -88,7 +97,10 @@ tech_type_list <- c("coal",      # Black coal
                     "renewable", # Wind
                     "renewable", # Utilitiy scale solar
                     "renewable", # Distributed PV
-                    "gas")       # Peaking gas+liquids
+                    "gas",       # Peaking gas+liquids
+                    "storage",  # Utility storage load
+                    "storage",  # Coordinated CER storage load
+                    "storage")  # Passive CER storage load
 
 
 
