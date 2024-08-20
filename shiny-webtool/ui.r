@@ -23,6 +23,8 @@ sidebar <- dashboardSidebar(
 
 body <- dashboardBody(
   tabItems(
+    
+#----- GENERATOR CAPACITY -----------------------------------------------------
     tabItem(tabName = "generator_capacity",                         # Tab item 1
             h2("Generator capacity (MW) overview"),
             

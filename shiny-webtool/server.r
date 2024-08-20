@@ -89,7 +89,7 @@ shinyServer(function(input, output, session){
       scale_x_continuous(breaks = unique(d$year),
                          labels = unique(d$year)) +
       labs(fill = "Technology",
-           title = glue("{input$region} generator capacity"),
+           title = glue("Region generator capacity"),
            subtitle = glue("{input$scenario} scenario"),
            caption = glue("Source: {input$source}"),
            x = "Year (financial year ending 30-jun-YYYY)",

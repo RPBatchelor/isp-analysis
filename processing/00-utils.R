@@ -141,6 +141,8 @@ odp_table <- bind_cols(isp_list,
          "scenario" = "...3")
 
 
+save(util_table, file = "shiny-webtool/data/util_table.rda")
+save(odp_table, file = "shiny-webtool/data/odp_table.rda")
 
 
 rm(tech_list, tech_type_list, dispatch_list, colour_list)
