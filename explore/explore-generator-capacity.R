@@ -21,6 +21,20 @@ gwalkr(isp_generator_capacity)
 
 
 
+p1 <- chart_generator_capacity(isp_source = "2024_final",
+                               isp_scenario = "step change",
+                               cdp_scenario = "cdp14",
+                               region_name = "NEM",
+                               technology_type = c("wind", "black coal", "offshore wind"),
+                               dispatchable = F)
+p1
+
+ggplotly(p1)
+
+
+
+
+
 data <- isp_generator_capacity |> 
   filter(source %in% c("2024_final", "2022_final", "2020_final")) |> 
   mutate(year_scenario = str_extract(source, "\\d{4}"),
