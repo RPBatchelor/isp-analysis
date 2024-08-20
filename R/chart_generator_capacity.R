@@ -5,11 +5,14 @@ chart_generator_capacity <- function(cdp_scenario,
                                      region_name = "NEM",
                                      isp_scenario,
                                      isp_source,
+                                     technology_type = "all",
                                      dispatchable = F){
   
   stopifnot(cdp_scenario %in% unique(isp_generator_capacity$cdp))
   stopifnot(isp_scenario %in% unique(isp_generator_capacity$scenario))
   stopifnot(isp_source %in% unique(isp_generator_capacity$source))
+  stopifnot(is.vector(technology_type) || technology_type == "all")
+
   
   if(region_name == "NEM"){
     
@@ -32,6 +35,16 @@ chart_generator_capacity <- function(cdp_scenario,
              scenario == isp_scenario,
              source == isp_source) 
   }
+  
+  
+  if(identical(technology_type, "all")){
+    # Do nothing
+  } else {
+    stopifnot(technology_type %in% unique(isp_generator_capacity$technology))
+    data <- data |> 
+      filter(technology %in% technology_type)
+  }
+  
   
   p <- data |> 
     left_join(util_table, by = c("technology" = "technology")) |> 
@@ -87,20 +100,6 @@ chart_generator_capacity <- function(cdp_scenario,
   
 }
 
-
-
-# 
-# # Create the stacked bar chart
-# p <- ggplot(data, aes(x = category, y = value, fill = type)) +
-#   geom_bar(stat = "identity") +
-#   geom_line(data = data_sum, aes(x = category, y = dispatchable, group = 1, linetype = "Dispatchable"),
-#             color = "black", size = 1) +
-#   scale_fill_brewer(palette = "Set3", name = "Technology") +
-#   scale_linetype_manual(name = "Capacity Type", values = c("Dispatchable" = "dashed")) +
-#   theme_minimal() +
-#   theme(legend.position = "bottom") +  # Position the legend at the bottom
-#   guides(fill = guide_legend(order = 1), # Order the fill legend first
-#          linetype = guide_legend(order = 2))
 
 
 
