@@ -4,8 +4,11 @@ library(tidyverse)
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
+library(plotly)
 library(bslib)
 library(thematic)
+
+
 
 
 

@@ -146,7 +146,29 @@ isp_generation_output |>
 
   
   
-  
+
+a <- isp_generator_capacity |> 
+  filter(region == "NSW",
+         source == "2024_final",
+         cdp == "cdp14", 
+         scenario == "step change") |> 
+  left_join(util_table, by = c("technology" = "technology")) |> 
+  mutate(re_ff = case_when(tech_type_cgr %in% c("coal", "gas") ~ "fossil",
+                           .default = tech_type_cgr)) |> 
+  mutate(re_ff = factor(re_ff, levels = c("fossil", "renewable", "storage", "dsp"))) |> 
+  group_by(year, re_ff) |> 
+  summarise(value = sum(value)) |> 
+  ungroup() |> 
+  mutate(value = value/1000)
+
+
+p <- a |> 
+  ggplot() +
+  geom_area(aes(x = year, y = value, fill = reorder(re_ff, -as.numeric(re_ff))))
+
+
+p
+
   
   
   

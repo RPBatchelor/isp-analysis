@@ -73,7 +73,8 @@ shinyServer(function(input, output, session){
              technology %in% input$technology,
              region %in% input$region) |> 
       left_join(util_table, by = c("technology" = "technology")) |> 
-      mutate(technology = factor(technology, levels = util_table$technology))
+      mutate(technology = factor(technology, levels = util_table$technology)) |> 
+      mutate(value = value/1000)
     
     p <- d |> 
       ggplot() +
@@ -84,7 +85,7 @@ shinyServer(function(input, output, session){
                stat = "identity",
                show.legend = TRUE) +
       scale_y_continuous(labels = scales::label_comma()) +
-      scale_y_continuous(labels = label_number(scale = 1e-3)) +
+      scale_y_continuous(labels = label_number(scale = 1)) +
       scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) + 
       scale_x_continuous(breaks = unique(d$year),
                          labels = unique(d$year)) +
@@ -103,15 +104,49 @@ shinyServer(function(input, output, session){
             plot.background = element_rect(fill = "white"),
             axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
     
-    return(ggplotly(p, tooltip = c("text")) |> 
-             plotly::config(displayModeBar = FALSE))
+    if(input$show_dispatchable == T){
+      d2 <- d |> 
+        filter(dispatchable == T) |> 
+        group_by(year) |> 
+        summarise(value = sum(value)) |> 
+        ungroup()
+      
+      p <- p + 
+        geom_line(data = d2,
+                  aes(x = year, y = value, linetype = "Dispatchable"),
+                  colour = "red4",
+                  size = 0.8) +
+        scale_linetype_manual(name = "Dispatchable", values = c("Dispatchable" = "dashed")) +
+        guides(fill = guide_legend(order =1 ),
+               linetype = guide_legend(order= 2))
+    }
+    
+    if(input$show_total_capacity == T){
+      d3 <- d |> 
+        group_by(year) |> 
+        summarise(value = sum(value)) |> 
+        ungroup()
+      
+      p <- p +
+        geom_text(data = d3,
+                  aes(x = year,
+                      y = value,
+                      label = scales::comma(round(value, 1))),
+                  nudge_y = 4, size = 3, colour = "gray30")
+      
+    }
+    
+    return(ggplotly(p, tooltip = c("value")) |>
+             plotly::config(displayModeBar = TRUE))
+    
+ 
   })
   
   output$generation_capacity_plot <- renderPlotly(generation_capacity_plot())
 
 
   
-  
+  # ============================================================================
   
 
   
