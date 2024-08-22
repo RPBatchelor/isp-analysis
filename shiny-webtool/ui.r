@@ -45,63 +45,112 @@ body <- dashboardBody(
                      tabPanel("Annual capacity", 
                               h3(NULL),
                                        
-                                       fluidRow(
-                                         box(title = "Select ISP inputs",
-                                             width = full_page_width,
-                                             solidHeader = TRUE,
-                                             
-                                             column(input_col_width, pickerInput("region",
-                                                                                 "Select region",
-                                                                                 choices = NULL,
-                                                                                 multiple = TRUE,
-                                                                                 selected = c("VIC"),
-                                                                                 options = list(`actions-box` = TRUE))),
-                                             
-                                             column(input_col_width, selectInput("source",
-                                                                                 "Select ISP source",
-                                                                                 choices = NULL,
-                                                                                 multiple = FALSE,
-                                                                                 selected = NULL)),
-                                             
-                                             column(input_col_width, selectInput("scenario", 
-                                                                                 "Select scenario",
-                                                                                 choices = NULL,
-                                                                                 multiple = FALSE,
-                                                                                 selected = NULL)),
-                                             
-                                             column(input_col_width, selectInput("pathway",
-                                                                                 "Select pathway",
-                                                                                 choices = NULL,
-                                                                                 multiple = FALSE,
-                                                                                 selected = NULL)),
-                                             
-                                             column(input_col_width, pickerInput("technology",
-                                                                                 "Select technology type(s)",
-                                                                                 choices = NULL,
-                                                                                 multiple = TRUE,
-                                                                                 selected = NULL,
-                                                                                 options = list(`actions-box` = TRUE))),
-                                             
-                                             column(input_col_width, checkboxInput("show_dispatchable",
-                                                                                   "Show dispatchable capacity",
-                                                                                   value = FALSE),
-                                                    checkboxInput("show_total_capacity",
-                                                                  "Show total capacity",
-                                                                  value = FALSE))
-                                         )
-                                       ),
-                                       
-                                       fluidRow(
-                                         box(title = "Total generation capacity (GW)",
-                                             width = 12,
-                                             solidHeader = TRUE,
-                                             
-                                             plotlyOutput("generation_capacity_plot", height = "500px")))
+                               fluidRow(
+                                 box(title = "Select ISP inputs",
+                                     width = full_page_width,
+                                     solidHeader = TRUE,
+                                     
+                                     column(input_col_width, pickerInput("region",
+                                                                         "Select region",
+                                                                         choices = NULL,
+                                                                         multiple = TRUE,
+                                                                         selected = c("VIC"),
+                                                                         options = list(`actions-box` = TRUE))),
+                                     
+                                     column(input_col_width, selectInput("source",
+                                                                         "Select ISP source",
+                                                                         choices = NULL,
+                                                                         multiple = FALSE,
+                                                                         selected = NULL)),
+                                     
+                                     column(input_col_width, selectInput("scenario", 
+                                                                         "Select scenario",
+                                                                         choices = NULL,
+                                                                         multiple = FALSE,
+                                                                         selected = NULL)),
+                                     
+                                     column(input_col_width, selectInput("pathway",
+                                                                         "Select pathway",
+                                                                         choices = NULL,
+                                                                         multiple = FALSE,
+                                                                         selected = NULL)),
+                                     
+                                     column(input_col_width, pickerInput("technology",
+                                                                         "Select technology type(s)",
+                                                                         choices = NULL,
+                                                                         multiple = TRUE,
+                                                                         selected = NULL,
+                                                                         options = list(`actions-box` = TRUE))),
+                                     
+                                     column(input_col_width, checkboxInput("show_dispatchable",
+                                                                           "Show dispatchable capacity",
+                                                                           value = FALSE),
+                                            checkboxInput("show_total_capacity",
+                                                          "Show total capacity",
+                                                          value = FALSE))
+                                 )
+                               ),
+                               
+                               fluidRow(
+                                 box(title = "Total generation capacity (GW)",
+                                     width = 12,
+                                     solidHeader = TRUE,
+                                     
+                                     plotlyOutput("generation_capacity_plot", height = "500px")))
                               
                               ),
                      
-                     tabPanel("Tab 2",
-                              h3("Tab 2 content")),
+                     tabPanel("Net annual growth",
+                              h3(NULL),
+                              
+                              fluidRow(
+                                box(title = "Select ISP inputs",
+                                    width = full_page_width,
+                                    solidHeader = TRUE,
+                                    
+                                    column(input_col_width, pickerInput("region",
+                                                                        "Select region",
+                                                                        choices = NULL,
+                                                                        multiple = TRUE,
+                                                                        selected = c("VIC"),
+                                                                        options = list(`actions-box` = TRUE))),
+                                    
+                                    column(input_col_width, selectInput("source",
+                                                                        "Select ISP source",
+                                                                        choices = NULL,
+                                                                        multiple = FALSE,
+                                                                        selected = NULL)),
+                                    
+                                    column(input_col_width, selectInput("scenario", 
+                                                                        "Select scenario",
+                                                                        choices = NULL,
+                                                                        multiple = FALSE,
+                                                                        selected = NULL)),
+                                    
+                                    column(input_col_width, selectInput("pathway",
+                                                                        "Select pathway",
+                                                                        choices = NULL,
+                                                                        multiple = FALSE,
+                                                                        selected = NULL)),
+                                    
+                                    column(input_col_width, pickerInput("technology",
+                                                                        "Select technology type(s)",
+                                                                        choices = NULL,
+                                                                        multiple = TRUE,
+                                                                        selected = NULL,
+                                                                        options = list(`actions-box` = TRUE)))
+                                    
+                                )
+                              ),
+                              
+                              fluidRow(
+                                box(title = "Net annual additions (GW)",
+                                    width = 12,
+                                    solidHeader = TRUE,
+                                    
+                                    plotlyOutput("generation_capacity_growth_plot", height = "500px")))
+                              
+                              ),
                      
                      tabPanel("Tab 3",
                               h3("Tab 3 content")),
