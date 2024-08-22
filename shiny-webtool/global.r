@@ -8,6 +8,9 @@ library(plotly)
 library(bslib)
 library(thematic)
 
+library(scales)
+library(glue)
+
 
 
 
