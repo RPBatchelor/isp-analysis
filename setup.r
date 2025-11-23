@@ -15,9 +15,15 @@ library(plotly)
 library(glue)
 library(patchwork)
 library(rvest)
-library(GWalkR)
 
-library(shiny)
+# library(RSelenium)
+# library(wdman)
+
+# library(httr2)
+# library(GWalkR)
+library(chromote)
+
+# library(shiny)
 
 
 # Value to test if values are equal
