@@ -78,10 +78,10 @@ ui <- page_navbar(
   
   
   nav_panel(
-    title = "Generation capacity & output",
+    title = "Technology view",
     layout_sidebar(
       sidebar = sidebar(
-        h4("Select ISP source"),
+        h4("ISP source data"),
         
         selectInput("source",
                     "Select ISP source",
@@ -105,7 +105,7 @@ ui <- page_navbar(
                       "Use only optimal development paths",
                       value = FALSE),
         
-        h4("Analysis inputs"),
+        h4("Chart inputs"),
 
         pickerInput("region",
                     "Select region",
@@ -114,12 +114,35 @@ ui <- page_navbar(
                     selected = c("VIC"),
                     options = list(`actions-box` = TRUE)),
 
-        pickerInput("technology",
-                    "Select technology type(s)",
-                    choices = NULL,
-                    multiple = TRUE,
-                    selected = NULL,
-                    options = list(`actions-box` = TRUE)),
+        # Conditional filter for generation tabs (tabs 1-3)
+        conditionalPanel(
+          condition = "input.technology_tabs == 'Generation capacity (GW)' || input.technology_tabs == 'Generation output (GWh)' || input.technology_tabs == 'Generation net additions'",
+          pickerInput("technology",
+                      "Select technology type(s)",
+                      choices = NULL,
+                      multiple = TRUE,
+                      selected = NULL,
+                      options = list(`actions-box` = TRUE))
+        ),
+
+        # Conditional filter for storage tabs (tabs 4-6)
+        conditionalPanel(
+          condition = "input.technology_tabs == 'Storage capacity (GW)' || input.technology_tabs == 'Storage output (GWh)' || input.technology_tabs == 'Storage net additions (MW)'",
+          pickerInput("storage_type",
+                      "Select storage type(s)",
+                      choices = NULL,
+                      multiple = TRUE,
+                      selected = NULL,
+                      options = list(`actions-box` = TRUE))
+        ),
+
+        virtualSelectInput("show_simple_tech",
+                           "Select technology display options", 
+                           choices = c("Simplified",
+                                       "Detailed",
+                                       "Re-Fo-St"),
+                           width = "100%",
+                           dropboxWrapper = "body"),
 
         checkboxInput("show_dispatchable",
                       "Show dispatchable capacity",
@@ -137,16 +160,25 @@ ui <- page_navbar(
                    color = "primary",
                    icon = icon("download"),
                    size = "sm"),
+        
+        actionBttn("download_chart_image",
+                   "Download chart image",
+                   style = "simple",
+                   color = "primary",
+                   icon = icon("file-image"),
+                   size = "sm"),
 
         width = 300
       ),
+      
       navset_card_tab(
+        id = "technology_tabs",
         height = "calc(100vh - 120px)",
 
         nav_panel(
           title = "Generation capacity (GW)",
           card(
-            card_header("Total generation capacity (GW)"),
+            card_header("Total generation capacity (GW) per year, by technology type"),
             card_body(
               plotlyOutput("generation_capacity_plot", height = "500px")
             ),
@@ -158,7 +190,7 @@ ui <- page_navbar(
         nav_panel(
           title = "Generation output (GWh)",
           card(
-            card_header("Generation output (GWh)"),
+            card_header("Total generation output (GWh) per year, by technology type"),
             card_body(
               plotlyOutput("generation_output_plot", height = "500px")
             ),
@@ -168,16 +200,53 @@ ui <- page_navbar(
         ),
 
         nav_panel(
-          title = "Net additions",
+          title = "Generation net additions",
           card(
-            card_header("Net additions (MW)"),
+            card_header("Generation capacity net change per year (MW) (additions / retirements)"),
             card_body(
               plotlyOutput("generation_capacity_growth_plot", height = "500px")
             ),
             full_screen = TRUE,
             height = "100%"
           )
-        )
+        ),
+        
+        nav_panel(
+          title = "Storage capacity (GW)",
+          card(
+            card_header("Total storage capacity (GW)"),
+            card_body(
+              plotlyOutput("storage_capacity_plot", height = "500px")
+            ),
+            full_screen = TRUE,
+            height = "100%"
+          )
+        ),
+        
+        nav_panel(
+          title = "Storage output (GWh)",
+          card(
+            card_header("Total storage output (GWh)"),
+            card_body(
+              plotlyOutput("storage_output_plot", height = "500px")
+            ),
+            full_screen = TRUE,
+            height = "100%"
+          )
+        ),
+        
+        nav_panel(
+          title = "Storage net additions (MW)",
+          card(
+            card_header("Storage net change per year (MW)"),
+            card_body(
+              plotlyOutput("storage_capacity_growth_plot", height = "500px")
+            ),
+            full_screen = TRUE,
+            height = "100%"
+          )
+        ),
+        
       )
     )
   ),
@@ -326,18 +395,28 @@ server <- function(input, output, session){
                       selected = selected_pathway)
   })
   
-  #-----E. Technology filter
+  #-----E. Technology filter (for generation tabs)
   observeEvent(input$source, {
-    filtered_technologies <- source_scenario_pathway_list |> 
-      filter(source == input$source) |> 
-      pull(technology) |> 
+    filtered_technologies <- source_scenario_pathway_list |>
+      filter(source == input$source) |>
+      pull(technology) |>
       unique()
-    
-    updatePickerInput(session, "technology", 
-                      choices = filtered_technologies, 
-                      selected = filtered_technologies)
-    
 
+    updatePickerInput(session, "technology",
+                      choices = filtered_technologies,
+                      selected = filtered_technologies)
+  })
+
+  #-----F. Storage type filter (for storage tabs)
+  observeEvent(input$source, {
+    filtered_storage_types <- isp_storage_capacity |>
+      filter(source == input$source) |>
+      pull(storage_category) |>
+      unique()
+
+    updatePickerInput(session, "storage_type",
+                      choices = filtered_storage_types,
+                      selected = filtered_storage_types)
   })
   
   
@@ -345,9 +424,48 @@ server <- function(input, output, session){
 
   # Download button - show message that feature is not yet implemented
   observeEvent(input$download_chart_data, {
+
+    # Get information about the currently active tab
+    tab_info <- get_active_tab_info(input)
+
+    # Create description based on chart type
+    # Handle NULL or missing chart_type
+    if (is.null(tab_info$chart_type) || tab_info$chart_type == "") {
+      data_description <- "No data available for this tab"
+    } else {
+      data_description <- switch(
+        tab_info$chart_type,
+        "generation_capacity" = "generation capacity data (GW) by technology and year",
+        "generation_output" = "generation output data (GWh) by technology and year",
+        "generation_net_additions" = "net capacity additions/retirements (MW) by technology and year",
+        "storage_capacity" = "storage capacity data (GW) by technology and year",
+        "storage_output" = "storage output data (GWh) by technology and year",
+        "storage_net_additions" = "net storage capacity additions (MW) by technology and year",
+        "No data available for this tab"  # default case
+      )
+    }
+
+    # Build the message
+    message_text <- if (!is.null(tab_info$sub_tab)) {
+      paste0(
+        "You have selected to download data from:\n\n",
+        "Main tab: ", tab_info$main_tab, "\n",
+        "Sub-tab: ", tab_info$sub_tab, "\n",
+        "Chart type: ", ifelse(is.null(tab_info$chart_type), "NULL", tab_info$chart_type), "\n\n",
+        "This would generate a data download for: ", data_description
+      )
+    } else {
+      paste0(
+        "You have selected to download data from:\n\n",
+        "Main tab: ", tab_info$main_tab, "\n",
+        "Chart type: ", ifelse(is.null(tab_info$chart_type), "NULL", tab_info$chart_type), "\n\n",
+        "This would generate a data download for: ", data_description
+      )
+    }
+
     showModal(modalDialog(
       title = "Feature Not Available",
-      "Data download functionality not yet implemented.",
+      message_text,
       easyClose = TRUE,
       footer = modalButton("Close")
     ))
