@@ -103,7 +103,7 @@ ui <- page_navbar(
         
         checkboxInput("show-only-odp",
                       "Use only optimal development paths",
-                      value = FALSE),
+                      value = TRUE),
         
         h4("Chart inputs"),
 
@@ -422,7 +422,7 @@ server <- function(input, output, session){
   
   
 
-  # Download button - show message that feature is not yet implemented
+  # Download button
   observeEvent(input$download_chart_data, {
 
     # Get information about the currently active tab
@@ -473,7 +473,7 @@ server <- function(input, output, session){
   
   
 
-  # =---- 02. Generator capacity chart -----------------------------------------
+  # =---- 1.1. Generator capacity chart -----------------------------------------
   
   #Reactive data for the generation capacity chart
   chart_data_gen_capacity <- reactive({
@@ -487,6 +487,10 @@ server <- function(input, output, session){
              region %in% input$region) |>
       left_join(util_table, by = c("technology" = "technology")) |>
       mutate(technology = factor(technology, levels = util_table$technology)) |>
+      # Require group by to remove the breakdown of tech by state displayed on the chart - show as contiguous
+      group_by(technology, year, scenario, source, cdp, year_ending, odp, dispatchable) |> 
+      summarise(value = sum(value)) |> 
+      ungroup() |> 
       mutate(value_gw = value/1000)
   })
 
@@ -566,7 +570,7 @@ server <- function(input, output, session){
 
 
 
-  # =---- 03. Generator output chart -----------------------------------------
+  # =---- 1.2 Generator output chart -----------------------------------------
   
   #Reactive data for the generation capacity chart
   chart_data_gen_output <- reactive({
@@ -579,7 +583,11 @@ server <- function(input, output, session){
              technology %in% input$technology,
              region %in% input$region) |>
       left_join(util_table, by = c("technology" = "technology")) |>
-      mutate(technology = factor(technology, levels = util_table$technology)) 
+      mutate(technology = factor(technology, levels = util_table$technology)) |> 
+    # Require group by to remove the breakdown of tech by state displayed on the chart - show as contiguous
+      group_by(technology, year, scenario, source, cdp, year_ending, odp, dispatchable) |> 
+      summarise(value = sum(value)) |> 
+      ungroup() 
   })
   
   
@@ -657,7 +665,9 @@ server <- function(input, output, session){
   output$generation_output_plot <- renderPlotly(generation_output_plot())
   
   
-  # =---- 04. Generator capacity growth (net additions/ subtractions) chart ----
+  
+  
+  # =---- 1.3 Generator capacity growth (net additions/ subtractions) chart ----
   
   #Reactive data for the generation capacity chart
   chart_data_gen_capacity_change <- reactive({
@@ -719,9 +729,273 @@ server <- function(input, output, session){
 
   output$generation_capacity_growth_plot <- renderPlotly(generation_capacity_growth_plot())
   
-  
 
-}
+  
+  
+  
+  # =---- 1.4 Storage capacity chart -----------------------------------------
+  
+  #Reactive data for the storage capacity chart
+  chart_data_storage_capacity <- reactive({
+    req(input$source, input$scenario, input$pathway, input$storage_type, input$region)
+    
+    isp_storage_capacity |>
+      filter(source == input$source,
+             scenario == input$scenario,
+             cdp == input$pathway,
+             storage_category %in% input$storage_type,
+             region %in% input$region) |>
+      left_join(storage_util_table, by = c("storage_category" = "storage_category")) |>
+      mutate(storage_category = factor(storage_category, levels = storage_util_table$storage_category)) |>
+      # Require group by to remove the breakdown of tech by state displayed on chart - show as a contiguous bar
+      group_by(storage_category, year, scenario, source, cdp, year_ending, odp, dispatchable) |> 
+      summarise(value = sum(value)) |> 
+      ungroup() |> 
+      mutate(value_gw = value/1000) 
+  })
+  
+  
+  # Generate chart
+  
+  storage_capacity_plot <- reactive({
+    
+    d <- chart_data_storage_capacity()
+    
+    p <- d |>
+      ggplot() +
+      geom_bar(aes(x = year,
+                   y = value_gw,
+                   fill = reorder(storage_category, -as.numeric(storage_category))),
+               position = "stack",
+               stat = "identity",
+               show.legend = TRUE) +
+      scale_y_continuous(labels = scales::label_comma()) +
+      scale_y_continuous(labels = label_number(scale = 1)) +
+      scale_fill_manual(values = setNames(storage_util_table$colour_label, storage_util_table$storage_category)) +
+      scale_x_continuous(breaks = unique(d$year),
+                         labels = unique(d$year)) +
+      labs(fill = "Storage category",
+           # title = glue("Region generator capacity"),
+           subtitle = glue("{input$scenario} scenario"),
+           caption = glue("Source: {input$source}"),
+           x = "Year (financial year ending 30-jun-YYYY)",
+           y = "Capacity (GW)") +
+      theme_minimal(base_family = "Arial") +
+      theme(panel.grid.major.y = element_blank(),
+            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
+            panel.grid.minor.x = element_blank(),
+            panel.grid.major.x = element_blank(),
+            panel.background = element_rect(fill = "white"),
+            plot.background = element_rect(fill = "white"),
+            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
+    
+    if(input$show_dispatchable == T){
+      d2 <- d |>
+        filter(dispatchable == T) |>
+        group_by(year) |>
+        summarise(value_gw = sum(value_gw)) |>
+        ungroup()
+      
+      p <- p +
+        geom_line(data = d2,
+                  aes(x = year, y = value_gw),
+                  colour = "red4",
+                  linetype = "dashed",
+                  linewidth = 0.8,
+                  show.legend = FALSE)
+    }
+    
+    if(input$show_total_capacity == T){
+      d3 <- d |>
+        group_by(year) |>
+        summarise(value_gw = sum(value_gw)) |>
+        ungroup()
+      
+      p <- p +
+        geom_text(data = d3,
+                  aes(x = year,
+                      y = value_gw,
+                      label = scales::comma(round(value_gw, 1))),
+                  nudge_y = 4, size = 3, colour = "gray30")
+      
+    }
+    
+    return(ggplotly(p, tooltip = c("value_gw")) |>
+             plotly::config(displayModeBar = F))
+    
+    
+  })
+  
+  output$storage_capacity_plot <- renderPlotly(storage_capacity_plot())
+  
+  
+  
+  
+  
+  # =---- 1.5 Storage output chart -----------------------------------------
+  
+  #Reactive data for the storage capacity chart
+  chart_data_storage_output <- reactive({
+    req(input$source, input$scenario, input$pathway, input$storage_type, input$region)
+    
+    isp_storage_output |>
+      filter(source == input$source,
+             scenario == input$scenario,
+             cdp == input$pathway,
+             storage_category %in% input$storage_type,
+             region %in% input$region) |>
+      left_join(storage_util_table, by = c("storage_category" = "storage_category")) |>
+      mutate(storage_category = factor(storage_category, levels = storage_util_table$storage_category)) |>
+      # Require group by to remove the breakdown of tech by state displayed on chart - show as a contiguous bar
+      group_by(storage_category, year, scenario, source, cdp, year_ending, odp, dispatchable) |> 
+      summarise(value = sum(value)) |> 
+      ungroup() 
+  })
+  
+  
+  # Generate chart
+  
+  storage_output_plot <- reactive({
+    
+    d <- chart_data_storage_output()
+    
+    p <- d |>
+      ggplot() +
+      geom_bar(aes(x = year,
+                   y = value,
+                   fill = reorder(storage_category, -as.numeric(storage_category))),
+               position = "stack",
+               stat = "identity",
+               show.legend = TRUE) +
+      scale_y_continuous(labels = scales::label_comma()) +
+      scale_y_continuous(labels = label_number(scale = 1)) +
+      scale_fill_manual(values = setNames(storage_util_table$colour_label, storage_util_table$storage_category)) +
+      scale_x_continuous(breaks = unique(d$year),
+                         labels = unique(d$year)) +
+      labs(fill = "Storage category",
+           # title = glue("Region generator capacity"),
+           subtitle = glue("{input$scenario} scenario"),
+           caption = glue("Source: {input$source}"),
+           x = "Year (financial year ending 30-jun-YYYY)",
+           y = "Output (GWh)") +
+      theme_minimal(base_family = "Arial") +
+      theme(panel.grid.major.y = element_blank(),
+            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
+            panel.grid.minor.x = element_blank(),
+            panel.grid.major.x = element_blank(),
+            panel.background = element_rect(fill = "white"),
+            plot.background = element_rect(fill = "white"),
+            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
+    
+    if(input$show_dispatchable == T){
+      d2 <- d |>
+        filter(dispatchable == T) |>
+        group_by(year) |>
+        summarise(value_gw = sum(value_gw)) |>
+        ungroup()
+      
+      p <- p +
+        geom_line(data = d2,
+                  aes(x = year, y = value),
+                  colour = "red4",
+                  linetype = "dashed",
+                  linewidth = 0.8,
+                  show.legend = FALSE)
+    }
+    
+    if(input$show_total_capacity == T){
+      d3 <- d |>
+        group_by(year) |>
+        summarise(value = sum(value)) |>
+        ungroup()
+      
+      p <- p +
+        geom_text(data = d3,
+                  aes(x = year,
+                      y = value,
+                      label = scales::comma(round(value, 1))),
+                  nudge_y = 4, size = 3, colour = "gray30")
+      
+    }
+    
+    return(ggplotly(p, tooltip = c("value")) |>
+             plotly::config(displayModeBar = F))
+    
+    
+  })
+  
+  output$storage_output_plot <- renderPlotly(storage_output_plot())
+  
+  
+  
+  
+  
+  # =---- 1.6 Storage capacity growth (net additions/ subtractions) chart ----
+
+  #Reactive data for the storage capacity change chart
+  chart_data_storage_capacity_change <- reactive({
+    req(input$source, input$scenario, input$pathway, input$storage_type, input$region)
+
+    isp_storage_capacity |>
+      filter(source == input$source,
+             scenario == input$scenario,
+             cdp == input$pathway,
+             storage_category %in% input$storage_type,
+             region %in% input$region) |>
+      left_join(storage_util_table, by = c("storage_category" = "storage_category")) |>
+      mutate(storage_category = factor(storage_category, levels = storage_util_table$storage_category)) |> 
+      group_by(storage_category, year) |> 
+      summarise(value = sum(value)) |> 
+      arrange(year) |> 
+      mutate(net_capacity_added = value - lag(value)) |> 
+      ungroup()
+  })
+  
+  
+  storage_capacity_growth_plot <- reactive({
+    
+    d <- chart_data_storage_capacity_change()
+    
+    p <- d |> 
+      ggplot() +
+      geom_bar(aes(x = year, 
+                   y = net_capacity_added, 
+                   fill = reorder(storage_category, -as.numeric(storage_category))),
+               position = "stack",
+               stat = "identity",
+               show.legend = TRUE) +
+      scale_y_continuous(labels = scales::label_comma()) +
+      scale_y_continuous(labels = label_number(scale = 1)) +
+      scale_fill_manual(values = setNames(storage_util_table$colour_label, storage_util_table$storage_category)) + 
+      scale_x_continuous(breaks = unique(d$year),
+                         labels = unique(d$year)) +
+      labs(fill = "Storage category",
+           # title = glue("Generator capacity net change per year"),
+           subtitle = glue("{input$scenario} scenario"),
+           caption = glue("Source: {input$source}"),
+           x = "Year (financial year ending 30-jun-YYYY)",
+           y = "Storage capacity change (MW)") +
+      theme_minimal() +
+      theme(panel.grid.major.y = element_blank(),
+            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
+            panel.grid.minor.x = element_blank(),
+            panel.grid.major.x = element_blank(),
+            panel.background = element_rect(fill = "white"),
+            plot.background = element_rect(fill = "white"),
+            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
+    
+    
+    return(ggplotly(p, tooltip = c("net_capacity_added")) |>
+             plotly::config(displayModeBar = F))
+    
+  })
+  
+  output$storage_capacity_growth_plot <- renderPlotly(storage_capacity_growth_plot())
+  
+  
+    
+
+} # END SERVER BRACE
 
 
 
