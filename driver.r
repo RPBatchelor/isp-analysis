@@ -29,3 +29,6 @@ run_all_r_scripts("processing", cleanup = FALSE)
 run_all_r_scripts("prep", cleanup = FALSE)
 
 
+#----- 5. Prep shiny tool
+
+rsconnect::writeManifest(appDir = "shiny-webtool")
