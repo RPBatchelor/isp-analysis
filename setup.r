@@ -25,6 +25,17 @@ library(chromote)
 
 # library(shiny)
 
+# 
+# # Get the directory where app.R is located
+# app_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+# # Or if not using RStudio:
+# # app_dir <- getSrcDirectory(function(){})[1]
+# 
+# # Set working directory to app folder
+# setwd(app_dir)
+
+
+
 
 # Value to test if values are equal
 epsilon <- 1E-5
