@@ -47,7 +47,7 @@ get_active_tab_info <- function(input) {
   )
 
   # Check which main tab is active
-  if (main_tab == "Technology view") {
+  if (main_tab == "technology_view") {
     # Get the nested tab selection
     sub_tab <- input$technology_tabs
     result$sub_tab <- sub_tab
@@ -58,7 +58,7 @@ get_active_tab_info <- function(input) {
       result$data_reactive <- "chart_data_gen_capacity"
       result$plot_reactive <- "generation_capacity_plot"
 
-    } else if (sub_tab == "Total generation output (GWh)") {
+    } else if (sub_tab == "Generation output (GWh)") {
       result$chart_type <- "generation_output"
       result$data_reactive <- "chart_data_gen_output"
       result$plot_reactive <- "generation_output_plot"
@@ -84,14 +84,20 @@ get_active_tab_info <- function(input) {
       result$plot_reactive <- "storage_capacity_growth_plot"
     }
 
-  } else if (main_tab == "Storage capacity & output") {
-    result$chart_type <- "storage_overview"
+  } else if (main_tab == "home") {
+    result$chart_type <- NULL
 
-  } else if (main_tab == "Compare scenarios") {
-    result$chart_type <- "scenario_comparison"
+  } else if (main_tab == "emissions_view") {
+    result$chart_type <- NULL
 
-  } else if (main_tab == "Settings") {
-    result$chart_type <- "settings"
+  } else if (main_tab == "compare_scenarios") {
+    result$chart_type <- NULL
+
+  } else if (main_tab == "compare_regions") {
+    result$chart_type <- NULL
+
+  } else if (main_tab == "settings") {
+    result$chart_type <- NULL
   }
 
   return(result)
