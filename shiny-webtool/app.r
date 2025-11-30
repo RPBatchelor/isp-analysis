@@ -91,6 +91,7 @@ ui <- tagList(
     # Home page - first tab with sub-tabs
   nav_panel(
     title = tagList(icon("home"), "Home"),
+    value = "home",
     navset_card_tab(
       id = "home_tabs",
       height = "calc(100vh - 120px)",
@@ -107,7 +108,7 @@ ui <- tagList(
             card(
               card_header(
                 class = "bg-primary",
-                h2("Welcome to the ISP Analyser", style = "margin: 0;")
+                h2("Welcome to the ISP Analyser", style = "margin: 0; color: white; font-size: 1.5rem;")
               ),
               card_body(
                 h4("Interactive Analysis of Australia's Integrated System Plan"),
@@ -300,8 +301,10 @@ ui <- tagList(
 
   nav_panel(
     title = tagList(icon("solar-panel"), "Technology view"),
+    value = "technology_view",
     layout_sidebar(
       sidebar = sidebar(
+        bg = "#F2F2F2",
         h4("ISP source data"),
         
         selectInput("source",
@@ -375,19 +378,15 @@ ui <- tagList(
         
         h4("Download data"),
 
-        actionBttn("download_chart_data",
-                   "Download chart data",
-                   style = "simple",
-                   color = "primary",
-                   icon = icon("download"),
-                   size = "sm"),
-        
-        actionBttn("download_chart_image",
-                   "Download chart image",
-                   style = "simple",
-                   color = "primary",
-                   icon = icon("file-image"),
-                   size = "sm"),
+        downloadButton("download_chart_data",
+                       "Download chart data",
+                       class = "btn-primary",
+                       icon = icon("download")),
+
+        downloadButton("download_chart_image",
+                       "Download chart image",
+                       class = "btn-primary",
+                       icon = icon("file-image")),
 
         width = 300
       ),
@@ -472,53 +471,102 @@ ui <- tagList(
     )
   ),
   
-  
+
   nav_panel(
-    title = "Storage capacity & output",
-    navset_card_tab(
-      height = "calc(100vh - 120px)",
-      nav_panel(
-        title = "Storage capacity (MW)",
-        layout_sidebar(
-          sidebar = sidebar(
-            "SIDEBAR",
-            width = 300
-          ),
+    title = tagList(icon("cloud"), "Emissions view"),
+    value = "emissions_view",
+    layout_sidebar(
+      sidebar = sidebar(
+        bg = "#F2F2F2",
+        h4("ISP source data"),
+
+        selectInput("emissions_source",
+                    "Select ISP source",
+                    choices = NULL,
+                    multiple = FALSE,
+                    selected = NULL),
+
+        selectInput("emissions_scenario",
+                    "Select scenario",
+                    choices = NULL,
+                    multiple = FALSE,
+                    selected = NULL),
+
+        selectInput("emissions_pathway",
+                    "Select pathway",
+                    choices = NULL,
+                    multiple = FALSE,
+                    selected = NULL),
+
+        checkboxInput("emissions-show-only-odp",
+                      "Use only optimal development paths",
+                      value = TRUE),
+
+        h4("Chart inputs"),
+
+        pickerInput("emissions_region",
+                    "Select region",
+                    choices = NULL,
+                    multiple = TRUE,
+                    selected = NULL,
+                    options = list(`actions-box` = TRUE)),
+
+        virtualSelectInput("emissions_display_options",
+                           "Select display options",
+                           choices = NULL,
+                           width = "100%",
+                           dropboxWrapper = "body"),
+
+        h4("Download data"),
+
+        downloadButton("download_emissions_chart_data",
+                       "Download chart data",
+                       class = "btn-primary",
+                       icon = icon("download")),
+
+        downloadButton("download_emissions_chart_image",
+                       "Download chart image",
+                       class = "btn-primary",
+                       icon = icon("file-image")),
+
+        width = 300
+      ),
+
+      navset_card_tab(
+        id = "emissions_tabs",
+        height = "calc(100vh - 120px)",
+
+        nav_panel(
+          title = "Total emissions",
           card(
-            card_header("Storage output (GWh)"),
+            card_header("Total emissions (MtCO2e) per year"),
             card_body(
-              "CARD BODY"
+              "Chart content placeholder"
             ),
             full_screen = TRUE,
             height = "100%"
           )
-        )
-      ),
-      
-      nav_panel(
-        title = "Generation output (GWh)",
-        layout_sidebar(
-          sidebar = sidebar(
-            "SIDEBAR",
-            width = 300
-          ),
+        ),
+
+        nav_panel(
+          title = "Annual change",
           card(
-            card_header("Generation output (GWh)"),
+            card_header("Annual change in emissions (MtCO2e)"),
             card_body(
-              "Card body"
+              "Chart content placeholder"
             ),
             full_screen = TRUE,
             height = "100%"
           )
         )
       )
- 
     )
   ),
   
-  
+
   nav_panel(
-    title = "Compare scenarios",
+    title = tagList(icon("code-compare"), "Compare scenarios"),
+    value = "compare_scenarios",
     page_sidebar(
       sidebar = sidebar(
         "SIDE BAR"
@@ -533,12 +581,30 @@ ui <- tagList(
     )
   ),
   
+  nav_panel(
+    title = tagList(icon("map"), "Compare regions"),
+    value = "compare_regions",
+    page_sidebar(
+      sidebar = sidebar(
+        "SIDE BAR"
+      ),
+      card(
+        card_header("Compare regions"),
+        card_body(
+          "CARD BODY"
+        ),
+        full_screen = TRUE
+      )
+    )
+  ),
+
   # Insert spacer
   nav_spacer(),
-  
-  
+
+
   nav_panel(
     title = "Settings",
+    value = "settings",
     card(
       card_header("Settings page"),
       card_body(
@@ -644,56 +710,190 @@ server <- function(input, output, session){
   
   
 
-  # Download button
-  observeEvent(input$download_chart_data, {
+  # =---- Download handlers -----------------------------------------------------
 
-    # Get information about the currently active tab
-    tab_info <- get_active_tab_info(input)
+  # Download chart data handler
+  output$download_chart_data <- downloadHandler(
+    filename = function() {
+      # Get information about the currently active tab
+      tab_info <- get_active_tab_info(input)
 
-    # Create description based on chart type
-    # Handle NULL or missing chart_type
-    if (is.null(tab_info$chart_type) || tab_info$chart_type == "") {
-      data_description <- "No data available for this tab"
-    } else {
-      data_description <- switch(
+      # Require valid inputs
+      req(input$source, input$scenario)
+
+      # Create filename based on active tab and selections
+      if (is.null(tab_info$chart_type) || tab_info$chart_type == "") {
+        filename <- "isp_data.csv"
+      } else {
+        # Build descriptive filename
+        source_part <- gsub("_", "-", input$source)
+        scenario_part <- gsub(" ", "-", tolower(input$scenario))
+        chart_part <- tab_info$chart_type
+
+        filename <- paste0("isp_", source_part, "_", scenario_part, "_", chart_part, "_",
+                          format(Sys.Date(), "%Y%m%d"), ".csv")
+      }
+
+      return(filename)
+    },
+
+    content = function(file) {
+      # Get information about the currently active tab
+      tab_info <- get_active_tab_info(input)
+
+      # Validate that we have a valid chart type
+      req(tab_info$chart_type, tab_info$data_reactive)
+
+      # Validate we're on a valid tab
+      validate(
+        need(!is.null(tab_info$chart_type) && tab_info$chart_type != "",
+             "Please navigate to a chart tab first"),
+        need(!is.null(tab_info$data_reactive) && tab_info$data_reactive != "",
+             "No data source available for this tab")
+      )
+
+      # Get the reactive data based on the data_reactive name
+      data_to_download <- switch(
+        tab_info$data_reactive,
+        "chart_data_gen_capacity" = chart_data_gen_capacity(),
+        "chart_data_gen_output" = chart_data_gen_output(),
+        "chart_data_gen_capacity_change" = chart_data_gen_capacity_change(),
+        "chart_data_storage_capacity" = chart_data_storage_capacity(),
+        "chart_data_storage_output" = chart_data_storage_output(),
+        "chart_data_storage_capacity_change" = chart_data_storage_capacity_change(),
+        NULL  # default case
+      )
+
+      # Validate we have data
+      validate(
+        need(!is.null(data_to_download), "No data available"),
+        need(nrow(data_to_download) > 0, "No data available for current selection")
+      )
+
+      # Write the data to CSV
+      write.csv(data_to_download, file, row.names = FALSE)
+    }
+  )
+
+
+  # Download chart image handler
+  output$download_chart_image <- downloadHandler(
+    filename = function() {
+      # Get information about the currently active tab
+      tab_info <- get_active_tab_info(input)
+
+      # Require valid inputs
+      req(input$source, input$scenario)
+
+      # Create filename based on active tab and selections
+      if (is.null(tab_info$chart_type) || tab_info$chart_type == "") {
+        filename <- "isp_chart.svg"
+      } else {
+        # Build descriptive filename
+        source_part <- gsub("_", "-", input$source)
+        scenario_part <- gsub(" ", "-", tolower(input$scenario))
+        chart_part <- tab_info$chart_type
+
+        filename <- paste0("isp_", source_part, "_", scenario_part, "_", chart_part, "_",
+                          format(Sys.Date(), "%Y%m%d"), ".svg")
+      }
+
+      return(filename)
+    },
+
+    content = function(file) {
+      # Get information about the currently active tab
+      tab_info <- get_active_tab_info(input)
+
+      # Validate that we have a valid chart type
+      req(tab_info$chart_type, tab_info$data_reactive)
+
+      # Validate we're on a valid tab
+      validate(
+        need(!is.null(tab_info$chart_type) && tab_info$chart_type != "",
+             "Please navigate to a chart tab first"),
+        need(!is.null(tab_info$data_reactive) && tab_info$data_reactive != "",
+             "No data source available for this tab")
+      )
+
+      # Get the data for the chart
+      chart_data <- switch(
+        tab_info$data_reactive,
+        "chart_data_gen_capacity" = chart_data_gen_capacity(),
+        "chart_data_gen_output" = chart_data_gen_output(),
+        "chart_data_gen_capacity_change" = chart_data_gen_capacity_change(),
+        "chart_data_storage_capacity" = chart_data_storage_capacity(),
+        "chart_data_storage_output" = chart_data_storage_output(),
+        "chart_data_storage_capacity_change" = chart_data_storage_capacity_change(),
+        NULL
+      )
+
+      # Validate we have data
+      validate(
+        need(!is.null(chart_data), "No data available"),
+        need(nrow(chart_data) > 0, "No data available for current selection")
+      )
+
+      # Generate the ggplot based on chart type
+      plot_to_save <- switch(
         tab_info$chart_type,
-        "generation_capacity" = "generation capacity data (GW) by technology and year",
-        "generation_output" = "generation output data (GWh) by technology and year",
-        "generation_net_additions" = "net capacity additions/retirements (MW) by technology and year",
-        "storage_capacity" = "storage capacity data (GW) by technology and year",
-        "storage_output" = "storage output data (GWh) by technology and year",
-        "storage_net_additions" = "net storage capacity additions (MW) by technology and year",
-        "No data available for this tab"  # default case
+        "generation_capacity" = generate_generation_capacity_chart(
+          data = chart_data,
+          scenario = input$scenario,
+          source = input$source,
+          show_dispatchable = input$show_dispatchable,
+          show_total = input$show_total_capacity,
+          util_table = util_table
+        ),
+        "generation_output" = generate_generation_output_chart(
+          data = chart_data,
+          scenario = input$scenario,
+          source = input$source,
+          show_dispatchable = input$show_dispatchable,
+          show_total = input$show_total_capacity,
+          util_table = util_table
+        ),
+        "generation_net_additions" = generate_generation_net_additions_chart(
+          data = chart_data,
+          scenario = input$scenario,
+          source = input$source,
+          util_table = util_table
+        ),
+        "storage_capacity" = generate_storage_capacity_chart(
+          data = chart_data,
+          scenario = input$scenario,
+          source = input$source,
+          show_dispatchable = input$show_dispatchable,
+          show_total = input$show_total_capacity,
+          storage_util_table = storage_util_table
+        ),
+        "storage_output" = generate_storage_output_chart(
+          data = chart_data,
+          scenario = input$scenario,
+          source = input$source,
+          show_dispatchable = input$show_dispatchable,
+          show_total = input$show_total_capacity,
+          storage_util_table = storage_util_table
+        ),
+        "storage_net_additions" = generate_storage_net_additions_chart(
+          data = chart_data,
+          scenario = input$scenario,
+          source = input$source,
+          storage_util_table = storage_util_table
+        ),
+        NULL
       )
-    }
 
-    # Build the message
-    message_text <- if (!is.null(tab_info$sub_tab)) {
-      paste0(
-        "You have selected to download data from:\n\n",
-        "Main tab: ", tab_info$main_tab, "\n",
-        "Sub-tab: ", tab_info$sub_tab, "\n",
-        "Chart type: ", ifelse(is.null(tab_info$chart_type), "NULL", tab_info$chart_type), "\n\n",
-        "This would generate a data download for: ", data_description
+      # Validate we have a plot
+      validate(
+        need(!is.null(plot_to_save), "No plot available")
       )
-    } else {
-      paste0(
-        "You have selected to download data from:\n\n",
-        "Main tab: ", tab_info$main_tab, "\n",
-        "Chart type: ", ifelse(is.null(tab_info$chart_type), "NULL", tab_info$chart_type), "\n\n",
-        "This would generate a data download for: ", data_description
-      )
-    }
 
-    showModal(modalDialog(
-      title = "Feature Not Available",
-      message_text,
-      easyClose = TRUE,
-      footer = modalButton("Close")
-    ))
-  })
-  
-  
+      # Save the plot as SVG
+      ggsave(file, plot = plot_to_save, device = "svg", width = 12, height = 7, units = "in")
+    }
+  )
+
 
   # =---- 1.1. Generator capacity chart -----------------------------------------
   
@@ -722,70 +922,20 @@ server <- function(input, output, session){
   generation_capacity_plot <- reactive({
 
     d <- chart_data_gen_capacity()
-    
-    p <- d |>
-      ggplot() +
-      geom_bar(aes(x = year,
-                   y = value_gw,
-                   fill = reorder(technology, -as.numeric(technology))),
-               position = "stack",
-               stat = "identity",
-               show.legend = TRUE) +
-      scale_y_continuous(labels = scales::label_comma()) +
-      scale_y_continuous(labels = label_number(scale = 1)) +
-      scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) +
-      scale_x_continuous(breaks = unique(d$year),
-                         labels = unique(d$year)) +
-      labs(fill = "Technology",
-           # title = glue("Region generator capacity"),
-           subtitle = glue("{input$scenario} scenario"),
-           caption = glue("Source: {input$source}"),
-           x = "Year (financial year ending 30-jun-YYYY)",
-           y = "Capacity (GW)") +
-      theme_minimal(base_family = "Arial") +
-      theme(panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
-            panel.grid.minor.x = element_blank(),
-            panel.grid.major.x = element_blank(),
-            panel.background = element_rect(fill = "white"),
-            plot.background = element_rect(fill = "white"),
-            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
 
-    if(input$show_dispatchable == T){
-      d2 <- d |>
-        filter(dispatchable == T) |>
-        group_by(year) |>
-        summarise(value_gw = sum(value_gw)) |>
-        ungroup()
-
-      p <- p +
-        geom_line(data = d2,
-                  aes(x = year, y = value_gw),
-                  colour = "red4",
-                  linetype = "dashed",
-                  linewidth = 0.8,
-                  show.legend = FALSE)
-    }
-
-    if(input$show_total_capacity == T){
-      d3 <- d |>
-        group_by(year) |>
-        summarise(value_gw = sum(value_gw)) |>
-        ungroup()
-
-      p <- p +
-        geom_text(data = d3,
-                  aes(x = year,
-                      y = value_gw,
-                      label = scales::comma(round(value_gw, 1))),
-                  nudge_y = 4, size = 3, colour = "gray30")
-
-    }
+    # Use the chart generation function
+    p <- generate_generation_capacity_chart(
+      data = d,
+      scenario = input$scenario,
+      source = input$source,
+      show_dispatchable = input$show_dispatchable,
+      show_total = input$show_total_capacity,
+      util_table = util_table
+    )
 
     return(ggplotly(p, tooltip = c("value_gw")) |>
              plotly::config(displayModeBar = F))
-    
-    
+
   })
 
   output$generation_capacity_plot <- renderPlotly(generation_capacity_plot())
@@ -814,74 +964,24 @@ server <- function(input, output, session){
   
   
   # Generate chart
-  
+
   generation_output_plot <- reactive({
-    
+
     d <- chart_data_gen_output()
-    
-    p <- d |>
-      ggplot() +
-      geom_bar(aes(x = year,
-                   y = value,
-                   fill = reorder(technology, -as.numeric(technology))),
-               position = "stack",
-               stat = "identity",
-               show.legend = TRUE) +
-      scale_y_continuous(labels = scales::label_comma()) +
-      scale_y_continuous(labels = label_number(scale = 1)) +
-      scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) +
-      scale_x_continuous(breaks = unique(d$year),
-                         labels = unique(d$year)) +
-      labs(fill = "Technology",
-           # title = glue("Region generator capacity"),
-           subtitle = glue("{input$scenario} scenario"),
-           caption = glue("Source: {input$source}"),
-           x = "Year (financial year ending 30-jun-YYYY)",
-           y = "Output (GWh)") +
-      theme_minimal(base_family = "Arial") +
-      theme(panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
-            panel.grid.minor.x = element_blank(),
-            panel.grid.major.x = element_blank(),
-            panel.background = element_rect(fill = "white"),
-            plot.background = element_rect(fill = "white"),
-            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
-    
-    if(input$show_dispatchable == T){
-      d2 <- d |>
-        filter(dispatchable == T) |>
-        group_by(year) |>
-        summarise(value = sum(value)) |>
-        ungroup()
-      
-      p <- p +
-        geom_line(data = d2,
-                  aes(x = year, y = value),
-                  colour = "red4",
-                  linetype = "dashed",
-                  linewidth = 0.8,
-                  show.legend = FALSE)
-    }
-    
-    if(input$show_total_capacity == T){
-      d3 <- d |>
-        group_by(year) |>
-        summarise(value = sum(value)) |>
-        ungroup()
-      
-      p <- p +
-        geom_text(data = d3,
-                  aes(x = year,
-                      y = value,
-                      label = scales::comma(round(value, 1))),
-                  nudge_y = 4, size = 3, colour = "gray30")
-      
-    }
-    
+
+    # Use the chart generation function
+    p <- generate_generation_output_chart(
+      data = d,
+      scenario = input$scenario,
+      source = input$source,
+      show_dispatchable = input$show_dispatchable,
+      show_total = input$show_total_capacity,
+      util_table = util_table
+    )
+
     return(ggplotly(p, tooltip = c("value")) |>
              plotly::config(displayModeBar = F))
-    
-    
+
   })
   
   output$generation_output_plot <- renderPlotly(generation_output_plot())
@@ -912,41 +1012,20 @@ server <- function(input, output, session){
   
   
   generation_capacity_growth_plot <- reactive({
-    
+
     d <- chart_data_gen_capacity_change()
-    
-    p <- d |> 
-      ggplot() +
-      geom_bar(aes(x = year, 
-                   y = net_capacity_added, 
-                   fill = reorder(technology, -as.numeric(technology))),
-               position = "stack",
-               stat = "identity",
-               show.legend = TRUE) +
-      scale_y_continuous(labels = scales::label_comma()) +
-      scale_y_continuous(labels = label_number(scale = 1)) +
-      scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) + 
-      scale_x_continuous(breaks = unique(d$year),
-                         labels = unique(d$year)) +
-      labs(fill = "Technology",
-           # title = glue("Generator capacity net change per year"),
-           subtitle = glue("{input$scenario} scenario"),
-           caption = glue("Source: {input$source}"),
-           x = "Year (financial year ending 30-jun-YYYY)",
-           y = "Capacity (MW)") +
-      theme_minimal() +
-      theme(panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
-            panel.grid.minor.x = element_blank(),
-            panel.grid.major.x = element_blank(),
-            panel.background = element_rect(fill = "white"),
-            plot.background = element_rect(fill = "white"),
-            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
-    
-    
+
+    # Use the chart generation function
+    p <- generate_generation_net_additions_chart(
+      data = d,
+      scenario = input$scenario,
+      source = input$source,
+      util_table = util_table
+    )
+
     return(ggplotly(p, tooltip = c("net_capacity_added")) |>
              plotly::config(displayModeBar = F))
-    
+
   })
 
   output$generation_capacity_growth_plot <- renderPlotly(generation_capacity_growth_plot())
@@ -978,74 +1057,24 @@ server <- function(input, output, session){
   
   
   # Generate chart
-  
+
   storage_capacity_plot <- reactive({
-    
+
     d <- chart_data_storage_capacity()
-    
-    p <- d |>
-      ggplot() +
-      geom_bar(aes(x = year,
-                   y = value_gw,
-                   fill = reorder(storage_category, -as.numeric(storage_category))),
-               position = "stack",
-               stat = "identity",
-               show.legend = TRUE) +
-      scale_y_continuous(labels = scales::label_comma()) +
-      scale_y_continuous(labels = label_number(scale = 1)) +
-      scale_fill_manual(values = setNames(storage_util_table$colour_label, storage_util_table$storage_category)) +
-      scale_x_continuous(breaks = unique(d$year),
-                         labels = unique(d$year)) +
-      labs(fill = "Storage category",
-           # title = glue("Region generator capacity"),
-           subtitle = glue("{input$scenario} scenario"),
-           caption = glue("Source: {input$source}"),
-           x = "Year (financial year ending 30-jun-YYYY)",
-           y = "Capacity (GW)") +
-      theme_minimal(base_family = "Arial") +
-      theme(panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
-            panel.grid.minor.x = element_blank(),
-            panel.grid.major.x = element_blank(),
-            panel.background = element_rect(fill = "white"),
-            plot.background = element_rect(fill = "white"),
-            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
-    
-    if(input$show_dispatchable == T){
-      d2 <- d |>
-        filter(dispatchable == T) |>
-        group_by(year) |>
-        summarise(value_gw = sum(value_gw)) |>
-        ungroup()
-      
-      p <- p +
-        geom_line(data = d2,
-                  aes(x = year, y = value_gw),
-                  colour = "red4",
-                  linetype = "dashed",
-                  linewidth = 0.8,
-                  show.legend = FALSE)
-    }
-    
-    if(input$show_total_capacity == T){
-      d3 <- d |>
-        group_by(year) |>
-        summarise(value_gw = sum(value_gw)) |>
-        ungroup()
-      
-      p <- p +
-        geom_text(data = d3,
-                  aes(x = year,
-                      y = value_gw,
-                      label = scales::comma(round(value_gw, 1))),
-                  nudge_y = 4, size = 3, colour = "gray30")
-      
-    }
-    
+
+    # Use the chart generation function
+    p <- generate_storage_capacity_chart(
+      data = d,
+      scenario = input$scenario,
+      source = input$source,
+      show_dispatchable = input$show_dispatchable,
+      show_total = input$show_total_capacity,
+      storage_util_table = storage_util_table
+    )
+
     return(ggplotly(p, tooltip = c("value_gw")) |>
              plotly::config(displayModeBar = F))
-    
-    
+
   })
   
   output$storage_capacity_plot <- renderPlotly(storage_capacity_plot())
@@ -1076,74 +1105,24 @@ server <- function(input, output, session){
   
   
   # Generate chart
-  
+
   storage_output_plot <- reactive({
-    
+
     d <- chart_data_storage_output()
-    
-    p <- d |>
-      ggplot() +
-      geom_bar(aes(x = year,
-                   y = value,
-                   fill = reorder(storage_category, -as.numeric(storage_category))),
-               position = "stack",
-               stat = "identity",
-               show.legend = TRUE) +
-      scale_y_continuous(labels = scales::label_comma()) +
-      scale_y_continuous(labels = label_number(scale = 1)) +
-      scale_fill_manual(values = setNames(storage_util_table$colour_label, storage_util_table$storage_category)) +
-      scale_x_continuous(breaks = unique(d$year),
-                         labels = unique(d$year)) +
-      labs(fill = "Storage category",
-           # title = glue("Region generator capacity"),
-           subtitle = glue("{input$scenario} scenario"),
-           caption = glue("Source: {input$source}"),
-           x = "Year (financial year ending 30-jun-YYYY)",
-           y = "Output (GWh)") +
-      theme_minimal(base_family = "Arial") +
-      theme(panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
-            panel.grid.minor.x = element_blank(),
-            panel.grid.major.x = element_blank(),
-            panel.background = element_rect(fill = "white"),
-            plot.background = element_rect(fill = "white"),
-            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
-    
-    if(input$show_dispatchable == T){
-      d2 <- d |>
-        filter(dispatchable == T) |>
-        group_by(year) |>
-        summarise(value_gw = sum(value_gw)) |>
-        ungroup()
-      
-      p <- p +
-        geom_line(data = d2,
-                  aes(x = year, y = value),
-                  colour = "red4",
-                  linetype = "dashed",
-                  linewidth = 0.8,
-                  show.legend = FALSE)
-    }
-    
-    if(input$show_total_capacity == T){
-      d3 <- d |>
-        group_by(year) |>
-        summarise(value = sum(value)) |>
-        ungroup()
-      
-      p <- p +
-        geom_text(data = d3,
-                  aes(x = year,
-                      y = value,
-                      label = scales::comma(round(value, 1))),
-                  nudge_y = 4, size = 3, colour = "gray30")
-      
-    }
-    
+
+    # Use the chart generation function
+    p <- generate_storage_output_chart(
+      data = d,
+      scenario = input$scenario,
+      source = input$source,
+      show_dispatchable = input$show_dispatchable,
+      show_total = input$show_total_capacity,
+      storage_util_table = storage_util_table
+    )
+
     return(ggplotly(p, tooltip = c("value")) |>
              plotly::config(displayModeBar = F))
-    
-    
+
   })
   
   output$storage_output_plot <- renderPlotly(storage_output_plot())
@@ -1175,41 +1154,20 @@ server <- function(input, output, session){
   
   
   storage_capacity_growth_plot <- reactive({
-    
+
     d <- chart_data_storage_capacity_change()
-    
-    p <- d |> 
-      ggplot() +
-      geom_bar(aes(x = year, 
-                   y = net_capacity_added, 
-                   fill = reorder(storage_category, -as.numeric(storage_category))),
-               position = "stack",
-               stat = "identity",
-               show.legend = TRUE) +
-      scale_y_continuous(labels = scales::label_comma()) +
-      scale_y_continuous(labels = label_number(scale = 1)) +
-      scale_fill_manual(values = setNames(storage_util_table$colour_label, storage_util_table$storage_category)) + 
-      scale_x_continuous(breaks = unique(d$year),
-                         labels = unique(d$year)) +
-      labs(fill = "Storage category",
-           # title = glue("Generator capacity net change per year"),
-           subtitle = glue("{input$scenario} scenario"),
-           caption = glue("Source: {input$source}"),
-           x = "Year (financial year ending 30-jun-YYYY)",
-           y = "Storage capacity change (MW)") +
-      theme_minimal() +
-      theme(panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
-            panel.grid.minor.x = element_blank(),
-            panel.grid.major.x = element_blank(),
-            panel.background = element_rect(fill = "white"),
-            plot.background = element_rect(fill = "white"),
-            axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
-    
-    
+
+    # Use the chart generation function
+    p <- generate_storage_net_additions_chart(
+      data = d,
+      scenario = input$scenario,
+      source = input$source,
+      storage_util_table = storage_util_table
+    )
+
     return(ggplotly(p, tooltip = c("net_capacity_added")) |>
              plotly::config(displayModeBar = F))
-    
+
   })
   
   output$storage_capacity_growth_plot <- renderPlotly(storage_capacity_growth_plot())

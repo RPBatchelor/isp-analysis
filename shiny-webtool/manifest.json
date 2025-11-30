@@ -3816,7 +3816,7 @@
   },
   "files": {
     "app.r": {
-      "checksum": "49f1e0f362eae0d92a527f8a730a65eb"
+      "checksum": "6e2f9913f01989642b79da40a6952ff6"
     },
     "brand/_brand.yml": {
       "checksum": "51a46f49a18b49be047e16fd1500a932"
@@ -3872,8 +3872,11 @@
     "R/chart_technology_time_series.R": {
       "checksum": "87bbd2c08256fd80ab29e1180e4e7116"
     },
+    "R/generate_charts.R": {
+      "checksum": "3dee56413df8cbe2367d0379e84dd00b"
+    },
     "R/get_active_tab_info.R": {
-      "checksum": "d3bfee2fbe082389b2a5c9b858a84f6e"
+      "checksum": "918e0e108b829ca26670805e960b9dc4"
     }
   },
   "users": null
