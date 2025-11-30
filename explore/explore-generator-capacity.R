@@ -94,7 +94,8 @@ a <- isp_generation_output |>
                alpha = gen_load),
            position = "stack",
            stat = "identity",
-           show.legend = TRUE)+ scale_y_continuous(labels = scales::label_comma()) +
+           show.legend = TRUE)+ 
+  scale_y_continuous(labels = scales::label_comma()) +
   scale_y_continuous(labels = label_number(scale = 1e-3)) +
   scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) + 
   scale_alpha_manual(values = c("generation" = 1, "load" = 0.5)) + # Adjust alpha for load
@@ -102,6 +103,64 @@ a <- isp_generation_output |>
                      labels = unique(isp_generation_output$year))
 
 a
+
+
+
+
+a <- isp_generator_capacity |> 
+  filter(source == "2024_final",
+         scenario == "step change",
+         cdp == "cdp14",
+         region == "NSW") |> 
+  left_join(util_table, by = c("technology" = "technology")) |> 
+  mutate(technology = factor(technology, levels = util_table$technology)) |> 
+  group_by(technology) |> 
+  arrange(year) |> 
+  mutate(net_capacity_added = value - lag(value)) |> 
+  ungroup()
+
+p <- a |> 
+  ggplot()+
+  geom_bar(aes(x = year, 
+               y = net_capacity_added,
+               fill = reorder(technology, -as.numeric(technology))),
+               position = "stack",
+               stat = "identity",
+               show.legend = TRUE) +
+  scale_y_continuous(labels = scales::label_comma()) +
+  scale_y_continuous(labels = label_number(scale = 1e-3)) +
+  scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) + 
+  scale_alpha_manual(values = c("generation" = 1, "load" = 0.5)) + # Adjust alpha for load
+  scale_x_continuous(breaks = unique(isp_generation_output$year),
+                     labels = unique(isp_generation_output$year))
+
+p
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Calculate the share of renewables (like the chart)
@@ -146,7 +205,29 @@ isp_generation_output |>
 
   
   
-  
+
+a <- isp_generator_capacity |> 
+  filter(region == "NSW",
+         source == "2024_final",
+         cdp == "cdp14", 
+         scenario == "step change") |> 
+  left_join(util_table, by = c("technology" = "technology")) |> 
+  mutate(re_ff = case_when(tech_type_cgr %in% c("coal", "gas") ~ "fossil",
+                           .default = tech_type_cgr)) |> 
+  mutate(re_ff = factor(re_ff, levels = c("fossil", "renewable", "storage", "dsp"))) |> 
+  group_by(year, re_ff) |> 
+  summarise(value = sum(value)) |> 
+  ungroup() |> 
+  mutate(value = value/1000)
+
+
+p <- a |> 
+  ggplot() +
+  geom_area(aes(x = year, y = value, fill = reorder(re_ff, -as.numeric(re_ff))))
+
+
+p
+
   
   
   

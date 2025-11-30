@@ -15,9 +15,26 @@ library(plotly)
 library(glue)
 library(patchwork)
 library(rvest)
-library(GWalkR)
 
-library(shiny)
+# library(RSelenium)
+# library(wdman)
+
+# library(httr2)
+# library(GWalkR)
+library(chromote)
+
+# library(shiny)
+
+# 
+# # Get the directory where app.R is located
+# app_dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+# # Or if not using RStudio:
+# # app_dir <- getSrcDirectory(function(){})[1]
+# 
+# # Set working directory to app folder
+# setwd(app_dir)
+
+
 
 
 # Value to test if values are equal

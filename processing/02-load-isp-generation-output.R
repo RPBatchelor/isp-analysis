@@ -18,6 +18,11 @@
 # 04. Storage output (GWh)
 # 05. Retirements (MW)
 
+# ----- 00. Script drivers -----------------------------------------------------
+
+script_units <- "GWh"
+
+
 
 # ----- Generator output (MWh) ----------------------------------------------
 
@@ -29,7 +34,7 @@ all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-dat
                                                           range = "A3:AF5540",
                                                           scenario = str_extract(.x,
                                                                                  pattern = "-\\D*-"),
-                                                          output_unit = "GWh",
+                                                          output_unit = script_units,
                                                           source_data = "2024_final"))
 
 combined_2024_final <- bind_rows(all_data) |> 
@@ -51,7 +56,7 @@ all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-dat
                                                           range = "A3:AE932",
                                                           scenario = str_extract(.x,
                                                                                  pattern = "-\\D*-"),
-                                                          output_unit = "GWh",
+                                                          output_unit = script_units,
                                                           source_data = "2022_final"))
 
 combined_2022_final <- bind_rows(all_data) |> 
@@ -98,7 +103,7 @@ all_data <- pmap(list(list_files$file_path,
                                                      range = "A3:W123",
                                                      scenario = scenario,
                                                      cdp = cdp,
-                                                     output_unit = "GWh",
+                                                     output_unit = script_units,
                                                      source_data = "2020_final")})
 
 
@@ -120,7 +125,7 @@ counterfactual <- pmap(list(list_files$file_path,
                                                            range = "A3:W123",
                                                            scenario = scenario,
                                                            cdp = cdp,
-                                                           output_unit = "GWh",
+                                                           output_unit = script_units,
                                                            source_data = "2020_final")})
 
 combined_2020_final <- bind_rows(all_data, counterfactual) |>  
@@ -151,7 +156,7 @@ all_data <- map(list_files, ~read_isp_capacity_generation_2018(path = paste0("ra
                                                                range = "A20:X85",
                                                                scenario = str_extract(.x,
                                                                                       pattern = "-\\s.*"),
-                                                               output_unit = "GWh",
+                                                               output_unit = script_units,
                                                                source_data = "2018_final"))
 
 combined_2018_final <- bind_rows(all_data) |> 
@@ -187,7 +192,14 @@ isp_generation_output <- bind_rows(combined_2018_final,
                                 technology == "solar" ~ "utility-scale solar",
                                 technology == "rooftop pv" ~ "distributed pv",
                                 .default = technology)) |> 
-  mutate(year = as.numeric(year(year_ending)))
+  mutate(year = as.numeric(year(year_ending))) |> 
+  mutate(odp = case_when(
+    source == "2018_final" & cdp == "default" ~ TRUE,
+    source == "2020_final" & cdp == "dp1" ~ TRUE,
+    source == "2022_final" & cdp == "cdp8" ~ TRUE,
+    source == "2024_final" & cdp == "cdp14" ~ TRUE,
+    .default = FALSE
+  ))
 
 
 save(isp_generation_output, file = "shiny-webtool/data/isp_generation_output.rda", compress = "xz")

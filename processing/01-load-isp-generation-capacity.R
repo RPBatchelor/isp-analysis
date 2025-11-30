@@ -19,6 +19,12 @@
 # 05. Retirements (MW)
 
 
+# ----- 00. Script drivers -----------------------------------------------------
+
+script_units <- "MW"
+
+
+
 #----- 1. Download the generation and storage data files ------------------------
 
 # 2024
@@ -58,7 +64,7 @@ all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-dat
                                                           range = "A3:AG4604",
                                                           scenario = str_extract(.x,
                                                                                  pattern = "-\\D*-"),
-                                                          output_unit = "MW",
+                                                          output_unit = script_units,
                                                           source_data = "2024_final"))
 
 combined_2024_final <- bind_rows(all_data) |> 
@@ -79,7 +85,7 @@ all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-dat
                                                           range = "A3:AF782",
                                                           scenario = str_extract(.x,
                                                                                  pattern = "-\\D*-"),
-                                                          output_unit = "MW",
+                                                          output_unit = script_units,
                                                           source_data = "2022_final"))
 
 combined_2022_final <- bind_rows(all_data) |> 
@@ -126,7 +132,7 @@ all_data <- pmap(list(list_files$file_path,
                                                      range = "A3:X91",
                                                      scenario = scenario,
                                                      cdp = cdp,
-                                                     output_unit = "MW",
+                                                     output_unit = script_units,
                                                      source_data = "2020_final")})
 
 
@@ -148,7 +154,7 @@ counterfactual <- pmap(list(list_files$file_path,
                                                            range = "A3:X91",
                                                            scenario = scenario,
                                                            cdp = cdp,
-                                                           output_unit = "MW",
+                                                           output_unit = script_units,
                                                            source_data = "2020_final")})
 
 combined_2020_final <- bind_rows(all_data, counterfactual) |> 
@@ -177,7 +183,7 @@ all_data <- map(list_files, ~read_isp_capacity_generation_2018(path = paste0("ra
                                                                range = "A18:X73",
                                                                scenario = str_extract(.x,
                                                                                       pattern = "-\\s.*"),
-                                                               output_unit = "MW",
+                                                               output_unit = script_units,
                                                                source_data = "2018_final"))
 
 combined_2018_final <- bind_rows(all_data) |> 
@@ -187,6 +193,8 @@ combined_2018_final <- bind_rows(all_data) |>
          scenario = str_trim(scenario)) |> 
   mutate(year_ending = dmy(paste0("30-Jun-", substr(year, 6,7)))) |> 
   mutate(scenario = str_to_lower(scenario))
+
+
 
 
 
@@ -200,6 +208,7 @@ isp_generator_capacity <- bind_rows(combined_2018_final,
          cdp = str_to_lower(cdp)) |>  
   # Modify technology from previous ISP versions to match the full list based on ISP2024
   # TBC if this is OK - may need to create new column for 'modified tech' and keep original
+  # TODO Confirm OK to use modified tech, or create new column for modified tech
   mutate(technology = case_when(technology == "coordinated der storage" ~ "coordinated cer storage",
                               technology == "utility solar" ~ "utility-scale solar",
                               technology == "utility storage" ~"utility-scale storage",
@@ -211,7 +220,14 @@ isp_generator_capacity <- bind_rows(combined_2018_final,
                               technology == "solar" ~ "utility-scale solar",
                               technology == "rooftop pv" ~ "distributed pv",
                               .default = technology)) |> 
-  mutate(year = as.numeric(year(year_ending)))
+  mutate(year = as.numeric(year(year_ending))) |> 
+  mutate(odp = case_when(
+    source == "2018_final" & cdp == "default" ~ TRUE,
+    source == "2020_final" & cdp == "dp1" ~ TRUE,
+    source == "2022_final" & cdp == "cdp8" ~ TRUE,
+    source == "2024_final" & cdp == "cdp14" ~ TRUE,
+    .default = FALSE
+  ))
 
 
 save(isp_generator_capacity, file = "shiny-webtool/data/isp_generator_capacity.rda", compress = "xz")

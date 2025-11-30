@@ -1,0 +1,134 @@
+meta:
+  name:
+    short: ISP Analyser
+    # full: 
+  # link:
+  #   home: https://www.ausnetservices.com.au
+
+# logo:
+#   images:
+    # header: logos/header-logo.png  # Replace with actual logo file
+    # header-white: logos/header-logo-white.png
+    # logo-blue: "www/ausnet-logo-blue.svg"
+    # logo-white: "www/ausnet-logo-white.svg"
+  # alt: "AusNet corporate logo"
+    
+  #   full:
+  #     path: logos/full-logo.svg
+  #     alt: AusNet logo.
+  # small: logos/icon.png
+  # medium:
+  #   light: header
+  #   dark: header-white
+  # large: full
+
+color:
+  palette:
+    dark-blue: "#263A68"       # Primary Dark Blue
+    light-green: "#8BC34E"     # Primary Light Green
+    medium-blue: "#295BAA"
+    light-blue: "#0EC0C0"
+    bright-blue: "#4EC6E0"
+    dark-green: "#00855C"
+    medium-green: "#12B57A"
+    bright-green: "#8DD217"
+    solar: "#FFC804"
+    carbon: "#171717"
+    white: "#FFFFFF"
+    black: "#000000"
+  
+  foreground: "#171717"        # Text color
+  background: "#FFFFFF"        # Page background
+  primary: dark-blue           # Brand primary color
+  secondary: light-green       # Secondary brand color
+  success: medium-green        # Positive actions or success
+  info: light-blue             # Informational highlights
+  warning: solar               # Warnings or cautions
+  danger: carbon               # Not used for alerts, but included for completeness
+  light: white
+  dark: carbon
+
+typography:
+  fonts:
+    - family: Aptos
+      source: file
+      files:
+        - path: Aptos.ttf
+          style: normal
+        - path: Aptos-Bold.ttf
+        - path: Aptos-Light.ttf
+  
+  base:
+    family: Aptos
+    size: 12px
+    weight: 400
+    line-height: 1.5
+  
+  headings:
+    family: Aptos
+    weight: 700
+    line-height: 1.2
+    color: dark-blue
+  
+  monospace:
+    family: Aptos
+    size: 0.9em
+    # weight: [400, 500]
+    # style: [normal, italic]
+    
+  link:
+    weight: 600
+    color: light-green
+    decoration: underline
+  
+  
+  #   - family: Gilroy
+  #     source: file  # Proprietary font, placeholder paths
+  #     files:
+  #       - path: fonts/gilroy/Gilroy-ExtraBold.ttf
+  #         weight: 800
+  #       - path: fonts/gilroy/Gilroy-Bold.ttf
+  #         weight: 700
+  #       - path: fonts/gilroy/Gilroy-Regular.ttf
+  #         weight: 400
+  #       - path: fonts/gilroy/Gilroy-Light.ttf
+  #         weight: 300
+  #     # Gilroy is the preferred brand font, but it is licensed.
+  #     # Staff must download and install Gilroy manually.
+  #     # Suggested Google Font alternative: "Poppins"
+  #   - family: Century Gothic
+  #     source: system
+  #     weight: [400, 700]
+  #     style: [normal]
+  #     # Used for general purposes or internal applications
+  # 
+  # base:
+  #   family: Century Gothic
+  #   weight: 400
+  #   size: 16px
+  #   line-height: 1.5
+  # 
+  # headings:
+  #   family: Gilroy
+  #   weight: 700
+  #   line-height: 1.2
+  #   color: dark-blue
+  # 
+  # link:
+  #   weight: 600
+  #   color: light-green
+  #   decoration: underline
+  # 
+  # monospace:
+  #   family: Fira Code
+  #   source: bunny
+  #   weight: [400, 500]
+  #   style: [normal, italic]
+  #   size: 0.9em
+
+defaults:
+  shiny:
+    theme:
+      defaults:
+        navbar-bg: $brand-dark-blue
+

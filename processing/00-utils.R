@@ -143,6 +143,82 @@ odp_table <- bind_cols(isp_list,
 
 
 
+
+
+
+# Storage table
+
+
+storage_list <- c("shallow storage",
+                  "medium storage",
+                  "deep storage",
+                  "behind the meter storage",
+                  "snowy 2.0",
+                  "coordinated cer storage",
+                  "distributed storage",
+                  "passive cer storage",
+                  "borumba")
+
+
+# For now - keep distributed and behind the meter the same as passive cer storage
+
+colour_list <- c("#A4DBE8",  # shallow storage
+                 "#77C5D5",  # medium storage
+                 "#6BADBA",  # deep storage
+                 "#DD9CDF",  # behind the meter storage
+                 "#777DA7",  # snowy 2.0"
+                 "#A3519B",  # coordinated cer storage
+                 "#DD9CDF",  # distributed storage
+                 "#DD9CDF",  # passive cer storage
+                 "#8FA2D4")  # borumba  
+
+
+
+
+dispatch_list <- c(TRUE,   # shallow storage
+                   TRUE,   # medium storage
+                   TRUE,   # deep storage
+                   FALSE,  # behind the meter storage
+                   TRUE,   # snowy 2.0"
+                   TRUE,   # coordinated cer storage
+                   FALSE,  # distributed storage
+                   FALSE,  # passive cer storage
+                   TRUE)   # borumba  
+
+
+
+tech_type_list <- c("generic storage",
+                  "generic storage",
+                  "generic storage",
+                  "bess",
+                  "pumped hydro",
+                  "bess",
+                  "bess",
+                  "bess",
+                  "pumped hydro")
+
+
+storage_util_table <- bind_cols(storage_list,
+                        colour_list,
+                        dispatch_list,
+                        tech_type_list) |> 
+  rename("storage_category" = "...1",
+         "colour_label" = "...2",
+         "dispatchable" = "...3",
+         "tech_type_storage" = "...4")
+
+
+
+
+###############################################################################
+
+
+save(util_table, file = "shiny-webtool/data/util_table.rda")
+save(odp_table, file = "shiny-webtool/data/odp_table.rda")
+save(storage_util_table, file = "shiny-webtool/data/storage_util_table.rda")
+
+
 rm(tech_list, tech_type_list, dispatch_list, colour_list)
 rm(isp_list, odp_list, scenario_list)
+rm(storage_list)
 
