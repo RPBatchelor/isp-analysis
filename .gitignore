@@ -2,6 +2,11 @@
 .Rproj.user
 .Rproj.user/**
 .Rproj.user/
+
+.RProj.user
+.RProj.user/**
+.RProj.user/
+
 .Rhistory
 .RData
 .Ruserdata
