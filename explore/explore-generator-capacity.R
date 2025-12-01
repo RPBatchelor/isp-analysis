@@ -42,7 +42,7 @@ data <- isp_generator_capacity |>
   filter(year_scenario %in% c("2024_step change", "2022_step change", 
                               "2020_step change", "2020_central", "2020_slow change", "2020_fast change")) |> 
   left_join(odp_table, by = c("source" = "isp_source")) |> 
-  filter(cdp == odp,
+  filter(cdp == odp.y,
          year <= 2030) |>
   left_join(util_table, by = c("technology" = "technology")) |>
   filter(tech_type_cgr %in% c("renewable", "storage")) |> 
