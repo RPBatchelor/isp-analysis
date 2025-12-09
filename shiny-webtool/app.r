@@ -72,6 +72,21 @@ darken_color <- function(hex_color, factor = 0.7) {
 
 
 ui <- tagList(
+  # Custom CSS for compact scenario selectors
+  tags$head(
+    tags$style(HTML("
+      #scenario_selectors select.form-control,
+      #scenario_selectors input.form-control {
+        padding: 2px 4px;
+        height: 26px;
+        font-size: 0.8rem;
+      }
+      #scenario_selectors .form-group {
+        margin-bottom: 0;
+      }
+    "))
+  ),
+
   # Header section - full width row
   div(
     class = "bg-primary text-white",
@@ -99,201 +114,19 @@ ui <- tagList(
       # Welcome sub-tab
       nav_panel(
         title = "Welcome",
-        page_fluid(
-          layout_column_wrap(
-            width = 1,
-            heights_equal = "row",
-
-            # Main welcome card
-            card(
-              card_header(
-                class = "bg-primary",
-                h2("Welcome to the ISP Analyser", style = "margin: 0; color: white; font-size: 1.5rem;")
-              ),
-              card_body(
-                h4("Interactive Analysis of Australia's Integrated System Plan"),
-                p("This tool provides comprehensive visualizations and analysis of electricity generation and storage capacity
-                  projections from the Australian Energy Market Operator's (AEMO) Integrated System Plan (ISP)."),
-                hr(),
-                p(strong("What is the ISP?")),
-                p("The Integrated System Plan is AEMO's whole-of-system plan for the efficient development of Australia's
-                  National Electricity Market over the next 20+ years. It provides actionable information to support
-                  investment decisions in generation, storage, and transmission infrastructure."),
-                hr(),
-                p(em("Select a tab above to begin exploring the ISP data.")),
-                p(em("Last updated: 23 November 2025"))
-              )
-            ),
-
-            # Features overview
-            layout_column_wrap(
-              width = 1/2,
-
-              card(
-                card_header(h4("Technology View")),
-                card_body(
-                  p(strong("Explore generation and storage trends")),
-                  tags$ul(
-                    tags$li("Generation capacity and output by technology"),
-                    tags$li("Storage capacity and output analysis"),
-                    tags$li("Net capacity additions and retirements"),
-                    tags$li("Filter by region, scenario, and technology type")
-                  )
-                )
-              ),
-
-              card(
-                card_header(h4("Compare Scenarios")),
-                card_body(
-                  p(strong("Compare different ISP scenarios")),
-                  tags$ul(
-                    tags$li("Side-by-side scenario comparison"),
-                    tags$li("Analyze different development pathways"),
-                    tags$li("Understand scenario implications")
-                  )
-                )
-              )
-            ),
-
-            # Getting started card
-            card(
-              card_header(
-                class = "bg-secondary",
-                h4("Getting Started", style = "margin: 0;")
-              ),
-              card_body(
-                tags$ol(
-                  tags$li(strong("Navigate"), " - Use the tabs above to access different views"),
-                  tags$li(strong("Select"), " - Choose your ISP source, scenario, and pathway from the sidebar"),
-                  tags$li(strong("Filter"), " - Select regions and technologies to customize your analysis"),
-                  tags$li(strong("Visualize"), " - Interact with charts (zoom, pan, hover for details)"),
-                  tags$li(strong("Download"), " - Export chart data and images for your reports")
-                ),
-                hr(),
-                p(
-                  icon("info-circle"),
-                  " Tip: Use the 'Technology View' tab to start exploring generation and storage trends across different scenarios."
-                )
-              )
-            )
-          )
-        )
+        generate_welcome_content()
       ),
 
       # Definitions sub-tab
       nav_panel(
         title = "Definitions",
-        card(
-          card_header(
-            h3("Glossary of Terms", style = "margin: 0;")
-          ),
-          card_body(
-            p("This section provides definitions for key terms used throughout the ISP Analyser."),
-            hr(),
-
-            # Placeholder table structure
-            h4("Key Terms"),
-            tags$table(
-              class = "table table-striped table-hover",
-              style = "width: 100%;",
-              tags$thead(
-                tags$tr(
-                  tags$th("Term", style = "width: 25%;"),
-                  tags$th("Definition", style = "width: 75%;")
-                )
-              ),
-              tags$tbody(
-                tags$tr(
-                  tags$td(strong("ISP")),
-                  tags$td("Integrated System Plan - AEMO's roadmap for efficient development of the National Electricity Market")
-                ),
-                tags$tr(
-                  tags$td(strong("AEMO")),
-                  tags$td("Australian Energy Market Operator")
-                ),
-                tags$tr(
-                  tags$td(strong("Scenario")),
-                  tags$td("A plausible future pathway for the energy system based on different assumptions")
-                ),
-                tags$tr(
-                  tags$td(strong("CDP")),
-                  tags$td("Candidate Development Path - potential development trajectory for the energy system")
-                ),
-                tags$tr(
-                  tags$td(strong("ODP")),
-                  tags$td("Optimal Development Path - the most efficient development pathway for a given scenario")
-                ),
-                tags$tr(
-                  tags$td(strong("GW")),
-                  tags$td("Gigawatt - unit of power equal to 1,000 megawatts")
-                ),
-                tags$tr(
-                  tags$td(strong("GWh")),
-                  tags$td("Gigawatt-hour - unit of energy equal to 1,000 megawatt-hours")
-                ),
-                tags$tr(
-                  tags$td(tags$em("(More definitions to be added...)")),
-                  tags$td(tags$em(""))
-                )
-              )
-            )
-          ),
-          full_screen = TRUE
-        )
+        generate_definitions_content()
       ),
 
       # Scenario descriptions sub-tab
       nav_panel(
         title = "Scenario descriptions",
-        card(
-          card_header(
-            h3("ISP Scenario Descriptions", style = "margin: 0;")
-          ),
-          card_body(
-            p("This section describes the different scenarios modeled in the ISP, representing plausible futures for Australia's energy system."),
-            hr(),
-
-            # Placeholder for scenario descriptions
-            h4("2024 ISP Scenarios"),
-
-            tags$div(
-              class = "mb-4",
-              h5(strong("Step Change")),
-              p("The Step Change scenario represents a future where Australia takes strong action on emissions reduction,
-                with high consumer energy resource uptake, coordinated policy, and rapid technology development.
-                This scenario sees accelerated decarbonization and significant grid transformation.")
-            ),
-
-            tags$div(
-              class = "mb-4",
-              h5(strong("Progressive Change")),
-              p("Progressive Change assumes moderate progress toward decarbonization with steady policy support.
-                Technology costs decline at expected rates and consumer adoption grows gradually.
-                This scenario represents a balanced pathway with measured grid transformation.")
-            ),
-
-            tags$div(
-              class = "mb-4",
-              h5(strong("Green Energy Exports")),
-              p("This scenario envisions Australia developing a major green hydrogen export industry alongside
-                domestic decarbonization. It features very high renewable energy deployment to support both
-                domestic consumption and export production, requiring significant grid expansion.")
-            ),
-
-            tags$div(
-              class = "mb-4",
-              h5(strong("Slow Change")),
-              p("Slow Change represents a future with delayed policy action and slower technology adoption.
-                Emissions reduction proceeds more gradually with less coordinated policy support.
-                Fossil fuel generation remains in the system longer as renewable deployment is more moderate.")
-            ),
-
-            hr(),
-            p(tags$em("Note: Scenario details vary by ISP release year. The above describes 2024 ISP scenarios.
-                      Select different ISP sources in the Technology View to explore other scenario sets."))
-          ),
-          full_screen = TRUE
-        )
+        generate_scenario_descriptions_content()
       )
     )
   ),
@@ -567,16 +400,89 @@ ui <- tagList(
   nav_panel(
     title = tagList(icon("code-compare"), "Compare scenarios"),
     value = "compare_scenarios",
-    page_sidebar(
+    layout_sidebar(
       sidebar = sidebar(
-        "SIDE BAR"
-      ),
-      card(
-        card_header("Compare scenarios"),
-        card_body(
-          "CARD BODY"
+        bg = "#F2F2F2",
+        h5("Scenario selection", style = "margin-top: 0; margin-bottom: 8px;"),
+
+        # ODP filter checkbox
+        div(
+          style = "margin-bottom: 8px;",
+          checkboxInput("compare_show_only_odp",
+                        "Use only optimal development paths",
+                        value = TRUE)
         ),
-        full_screen = TRUE
+
+        hr(style = "margin: 8px 0;"),
+
+        # Dynamic scenario selectors will be rendered here
+        uiOutput("scenario_selectors"),
+
+        # Add/remove scenario buttons
+        div(
+          style = "margin-top: 4px; margin-bottom: 8px; display: flex; gap: 5px;",
+          actionButton("add_scenario",
+                       "Add",
+                       icon = icon("plus"),
+                       class = "btn-sm btn-success",
+                       style = "flex: 1; padding: 4px 8px; font-size: 0.8rem; height: 28px;"),
+          actionButton("remove_scenario",
+                       "Remove",
+                       icon = icon("minus"),
+                       class = "btn-sm btn-danger",
+                       style = "flex: 1; padding: 4px 8px; font-size: 0.8rem; height: 28px;")
+        ),
+
+        hr(style = "margin: 8px 0;"),
+
+        h5("Chart options", style = "margin-top: 0; margin-bottom: 8px;"),
+
+        pickerInput("compare_region",
+                    "Select region(s)",
+                    choices = NULL,
+                    multiple = TRUE,
+                    selected = NULL,
+                    options = list(`actions-box` = TRUE)),
+
+        pickerInput("compare_technology",
+                    "Select technology type(s)",
+                    choices = NULL,
+                    multiple = TRUE,
+                    selected = NULL,
+                    options = list(`actions-box` = TRUE)),
+
+        hr(style = "margin: 8px 0;"),
+
+        h5("Download data", style = "margin-top: 0; margin-bottom: 8px;"),
+
+        downloadButton("download_comparison_data",
+                       "Download chart data",
+                       class = "btn-primary",
+                       icon = icon("download")),
+
+        downloadButton("download_comparison_image",
+                       "Download chart image",
+                       class = "btn-primary",
+                       icon = icon("file-image")),
+
+        width = 300
+      ),
+
+      navset_card_tab(
+        id = "comparison_tabs",
+        height = "calc(100vh - 120px)",
+
+        nav_panel(
+          title = "Total capacity",
+          card(
+            card_header("Comparison of total generation capacity (GW) - by technology & region selected"),
+            card_body(
+              plotlyOutput("comparison_total_capacity_plot", height = "600px")
+            ),
+            full_screen = TRUE,
+            height = "100%"
+          )
+        )
       )
     )
   ),
@@ -1171,9 +1077,305 @@ server <- function(input, output, session){
   })
   
   output$storage_capacity_growth_plot <- renderPlotly(storage_capacity_growth_plot())
-  
-  
-    
+
+
+  # =---- 2. Compare Scenarios Section -------------------------------------------
+
+  # Reactive value to track number of scenarios
+  num_scenarios <- reactiveVal(1)  # Start with 2 scenarios
+
+  # Add scenario button
+  observeEvent(input$add_scenario, {
+    current <- num_scenarios()
+    if (current < 5) {
+      num_scenarios(current + 1)
+    }
+  })
+
+  # Remove scenario button
+  observeEvent(input$remove_scenario, {
+    current <- num_scenarios()
+    if (current > 1) {
+      num_scenarios(current - 1)
+    }
+  })
+
+  # Dynamic UI for scenario selectors
+  output$scenario_selectors <- renderUI({
+    n <- num_scenarios()
+
+    # Create a list of scenario selector panels
+    scenario_panels <- lapply(1:n, function(i) {
+
+      # Preserve existing values if they exist, otherwise use defaults only for first scenario
+      existing_source <- input[[paste0("scenario_", i, "_source")]]
+      existing_scenario <- input[[paste0("scenario_", i, "_scenario")]]
+      existing_cdp <- input[[paste0("scenario_", i, "_cdp")]]
+      existing_label <- input[[paste0("scenario_", i, "_label")]]
+
+      # Set default source only for the very first scenario on first load
+      default_source <- if(is.null(existing_source) && i == 1) "2024_final" else existing_source
+
+      div(
+        style = "background-color: white; padding: 4px 6px; margin-bottom: 4px; border-radius: 2px; border: 1px solid #ccc;",
+
+        h6(paste("Scenario", i), style = "margin: 0 0 4px 0; color: #0066cc; font-weight: 600; font-size: 0.9rem;"),
+
+        # Source dropdown (compact)
+        div(
+          style = "margin-bottom: 3px;",
+          tags$label(style = "font-size: 0.75rem; margin-bottom: 1px; display: block; font-weight: 500;", "Source"),
+          selectInput(paste0("scenario_", i, "_source"),
+                      label = NULL,
+                      choices = unique(source_scenario_pathway_list$source),
+                      selected = default_source,
+                      width = "100%",
+                      selectize = FALSE)
+        ),
+
+        # Scenario dropdown (compact)
+        div(
+          style = "margin-bottom: 3px;",
+          tags$label(style = "font-size: 0.75rem; margin-bottom: 1px; display: block; font-weight: 500;", "Scenario"),
+          selectInput(paste0("scenario_", i, "_scenario"),
+                      label = NULL,
+                      choices = if(!is.null(existing_scenario)) {
+                        # Preserve existing choices
+                        source_scenario_pathway_list |>
+                          filter(source == default_source) |>
+                          pull(scenario) |>
+                          unique()
+                      } else {
+                        NULL
+                      },
+                      selected = existing_scenario,
+                      width = "100%",
+                      selectize = FALSE)
+        ),
+
+        # CDP dropdown (compact)
+        div(
+          style = "margin-bottom: 3px;",
+          tags$label(style = "font-size: 0.75rem; margin-bottom: 1px; display: block; font-weight: 500;", "Pathway"),
+          selectInput(paste0("scenario_", i, "_cdp"),
+                      label = NULL,
+                      choices = if(!is.null(existing_cdp)) {
+                        # Preserve existing choices
+                        source_scenario_pathway_list |>
+                          filter(source == default_source,
+                                 scenario == existing_scenario) |>
+                          pull(cdp) |>
+                          unique() |>
+                          stringr::str_sort(numeric = TRUE)
+                      } else {
+                        NULL
+                      },
+                      selected = existing_cdp,
+                      width = "100%",
+                      selectize = FALSE)
+        ),
+
+        # Optional custom label
+        div(
+          style = "margin-bottom: 0;",
+          tags$label(style = "font-size: 0.75rem; margin-bottom: 1px; display: block; font-weight: 500;", "Label (optional)"),
+          textInput(paste0("scenario_", i, "_label"),
+                    label = NULL,
+                    value = existing_label,
+                    placeholder = paste("Scenario", i),
+                    width = "100%")
+        )
+      )
+    })
+
+    # Return all panels wrapped in a div
+    do.call(tagList, scenario_panels)
+  })
+
+
+  # Dynamic updates for scenario dropdowns
+  # We need to create observers for each possible scenario (1-5)
+  lapply(1:5, function(i) {
+
+    # Update scenario choices based on source
+    observeEvent(input[[paste0("scenario_", i, "_source")]], {
+      req(input[[paste0("scenario_", i, "_source")]])
+
+      filtered_scenarios <- source_scenario_pathway_list |>
+        filter(source == input[[paste0("scenario_", i, "_source")]]) |>
+        pull(scenario) |>
+        unique()
+
+      updateSelectInput(session, paste0("scenario_", i, "_scenario"),
+                        choices = filtered_scenarios,
+                        selected = "step change")
+    }, ignoreInit = TRUE)
+
+    # Update CDP choices based on source, scenario, and ODP filter
+    observeEvent(c(input[[paste0("scenario_", i, "_source")]],
+                   input[[paste0("scenario_", i, "_scenario")]],
+                   input$compare_show_only_odp), {
+      req(input[[paste0("scenario_", i, "_source")]],
+          input[[paste0("scenario_", i, "_scenario")]])
+
+      # Get all pathways for the selected source and scenario
+      filtered_cdps <- source_scenario_pathway_list |>
+        filter(source == input[[paste0("scenario_", i, "_source")]],
+               scenario == input[[paste0("scenario_", i, "_scenario")]]) |>
+        pull(cdp) |>
+        unique()
+
+      # If show-only-odp is checked, filter to only the ODP pathway for this ISP source
+      if(isTRUE(input$compare_show_only_odp)) {
+        # Get the ODP pathway for this ISP source (independent of scenario)
+        odp_pathway <- odp_table |>
+          filter(isp_source == input[[paste0("scenario_", i, "_source")]]) |>
+          pull(odp)
+
+        # Filter to only include the ODP pathway
+        if(length(odp_pathway) > 0) {
+          filtered_cdps <- intersect(filtered_cdps, odp_pathway)
+        }
+      }
+
+      # Sort pathways in natural order
+      filtered_cdps <- stringr::str_sort(filtered_cdps, numeric = TRUE)
+
+      updateSelectInput(session, paste0("scenario_", i, "_cdp"),
+                        choices = filtered_cdps,
+                        selected = if(length(filtered_cdps) > 0) filtered_cdps[1] else NULL)
+    }, ignoreInit = TRUE)
+  })
+
+
+  # Update region and technology filters for comparison
+  observe({
+    all_regions <- unique(region_list$region)
+
+    updatePickerInput(session, "compare_region",
+                      choices = all_regions,
+                      selected = all_regions)
+
+    # Get all technologies from selected sources
+    all_technologies <- source_scenario_pathway_list |>
+      pull(technology) |>
+      unique()
+
+    updatePickerInput(session, "compare_technology",
+                      choices = all_technologies,
+                      selected = all_technologies)
+  })
+
+
+  # Build scenarios tibble from user selections
+  selected_scenarios <- reactive({
+    n <- num_scenarios()
+
+    # Collect all scenario selections
+    sources <- character(n)
+    scenarios <- character(n)
+    cdps <- character(n)
+    labels <- character(n)
+
+    for (i in 1:n) {
+      sources[i] <- input[[paste0("scenario_", i, "_source")]]
+      scenarios[i] <- input[[paste0("scenario_", i, "_scenario")]]
+      cdps[i] <- input[[paste0("scenario_", i, "_cdp")]]
+
+      # Use custom label if provided, otherwise generate one
+      custom_label <- input[[paste0("scenario_", i, "_label")]]
+      if (!is.null(custom_label) && nchar(custom_label) > 0) {
+        labels[i] <- custom_label
+      } else {
+        labels[i] <- paste(sources[i], scenarios[i], cdps[i], sep = " | ")
+      }
+    }
+
+    # Require all inputs
+    req(all(!is.na(sources)), all(!is.na(scenarios)), all(!is.na(cdps)))
+
+    # Build scenarios tibble
+    build_scenarios_from_selections(sources, scenarios, cdps, labels)
+  })
+
+
+  # Filtered comparison data
+  comparison_data <- reactive({
+    req(selected_scenarios(), input$compare_region, input$compare_technology)
+
+    scenarios <- selected_scenarios()
+
+    # Filter the data
+    data <- filter_scenarios(isp_generator_capacity, scenarios) |>
+      filter(region %in% input$compare_region,
+             technology %in% input$compare_technology) |>
+      left_join(util_table, by = c("technology" = "technology"))
+
+    return(data)
+  })
+
+
+  # Total capacity comparison data (sum all regions and technologies)
+  comparison_total_capacity_data <- reactive({
+    req(comparison_data())
+
+    data <- comparison_data()
+
+    # Aggregate all regions and technologies
+    data <- data |>
+      group_by(year, scenario_label, source, scenario, cdp) |>
+      summarise(value = sum(value, na.rm = TRUE),
+                .groups = "drop") |>
+      mutate(value_gw = value / 1000)
+
+    return(data)
+  })
+
+
+  # Total capacity comparison plot
+  output$comparison_total_capacity_plot <- renderPlotly({
+    req(comparison_total_capacity_data())
+
+    data <- comparison_total_capacity_data()
+
+    # Use the chart generation function
+    p <- generate_scenario_comparison_chart(data)
+
+    ggplotly(p, tooltip = c("x", "y", "color")) |>
+      plotly::config(displayModeBar = FALSE)
+  })
+
+
+  # Download handlers for comparison data
+  output$download_comparison_data <- downloadHandler(
+    filename = function() {
+      paste0("scenario_comparison_total_capacity_",
+             format(Sys.Date(), "%Y%m%d"), ".csv")
+    },
+    content = function(file) {
+      req(comparison_total_capacity_data())
+      write.csv(comparison_total_capacity_data(), file, row.names = FALSE)
+    }
+  )
+
+  output$download_comparison_image <- downloadHandler(
+    filename = function() {
+      paste0("scenario_comparison_total_capacity_",
+             format(Sys.Date(), "%Y%m%d"), ".svg")
+    },
+    content = function(file) {
+      req(comparison_total_capacity_data())
+
+      data <- comparison_total_capacity_data()
+
+      # Use the chart generation function (same as displayed)
+      p <- generate_scenario_comparison_chart(data)
+
+      ggsave(file, plot = p, device = "svg", width = 12, height = 7, units = "in")
+    }
+  )
+
+
 
 } # END SERVER BRACE
 

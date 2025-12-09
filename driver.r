@@ -32,3 +32,13 @@ run_all_r_scripts("prep", cleanup = FALSE)
 #----- 5. Prep shiny tool
 
 rsconnect::writeManifest(appDir = "shiny-webtool")
+
+
+
+
+# data_files <- list.files("shiny-webtool/data", full.names = TRUE,
+#                          pattern = "\\.rda$")
+# 
+# for (d in data_files){
+#   load(d)
+# }

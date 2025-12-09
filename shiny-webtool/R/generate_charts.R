@@ -22,7 +22,10 @@
 #' @param util_table Utility table with technology colors
 #'
 #' @return A ggplot object
-generate_generation_capacity_chart <- function(data, scenario, source,
+
+generate_generation_capacity_chart <- function(data, 
+                                               scenario, 
+                                               source,
                                                show_dispatchable = FALSE,
                                                show_total = FALSE,
                                                util_table) {
@@ -97,7 +100,9 @@ generate_generation_capacity_chart <- function(data, scenario, source,
 #' @param util_table Utility table with technology colors
 #'
 #' @return A ggplot object
-generate_generation_output_chart <- function(data, scenario, source,
+generate_generation_output_chart <- function(data, 
+                                             scenario, 
+                                             source,
                                              show_dispatchable = FALSE,
                                              show_total = FALSE,
                                              util_table) {
@@ -170,7 +175,11 @@ generate_generation_output_chart <- function(data, scenario, source,
 #' @param util_table Utility table with technology colors
 #'
 #' @return A ggplot object
-generate_generation_net_additions_chart <- function(data, scenario, source, util_table) {
+
+generate_generation_net_additions_chart <- function(data, 
+                                                    scenario, 
+                                                    source, 
+                                                    util_table) {
 
   p <- data |>
     ggplot() +
@@ -212,7 +221,10 @@ generate_generation_net_additions_chart <- function(data, scenario, source, util
 #' @param storage_util_table Utility table with storage colors
 #'
 #' @return A ggplot object
-generate_storage_capacity_chart <- function(data, scenario, source,
+
+generate_storage_capacity_chart <- function(data, 
+                                            scenario, 
+                                            source,
                                             show_dispatchable = FALSE,
                                             show_total = FALSE,
                                             storage_util_table) {
@@ -287,7 +299,10 @@ generate_storage_capacity_chart <- function(data, scenario, source,
 #' @param storage_util_table Utility table with storage colors
 #'
 #' @return A ggplot object
-generate_storage_output_chart <- function(data, scenario, source,
+
+generate_storage_output_chart <- function(data, 
+                                          scenario, 
+                                          source,
                                           show_dispatchable = FALSE,
                                           show_total = FALSE,
                                           storage_util_table) {
@@ -360,7 +375,11 @@ generate_storage_output_chart <- function(data, scenario, source,
 #' @param storage_util_table Utility table with storage colors
 #'
 #' @return A ggplot object
-generate_storage_net_additions_chart <- function(data, scenario, source, storage_util_table) {
+
+generate_storage_net_additions_chart <- function(data,
+                                                 scenario,
+                                                 source,
+                                                 storage_util_table) {
 
   p <- data |>
     ggplot() +
@@ -377,7 +396,7 @@ generate_storage_net_additions_chart <- function(data, scenario, source, storage
     labs(fill = "Storage category",
          subtitle = glue("{scenario} scenario"),
          caption = glue("Source: {source}"),
-         x = "Year (financial year ending 30-jun-YYYY)",
+         x = "Year (financial year ending 30-Jun-YYYY)",
          y = "Storage capacity change (MW)") +
     theme_minimal() +
     theme(panel.grid.major.y = element_blank(),
@@ -387,6 +406,40 @@ generate_storage_net_additions_chart <- function(data, scenario, source, storage
           panel.background = element_rect(fill = "white"),
           plot.background = element_rect(fill = "white"),
           axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
+
+  return(p)
+}
+
+
+#' Generate Scenario Comparison Total Capacity Chart
+#'
+#' @param data The chart data (output from comparison_total_capacity_data reactive)
+#'
+#' @return A ggplot object
+
+generate_scenario_comparison_chart <- function(data) {
+
+  p <- data |>
+    ggplot(aes(x = year,
+               y = value_gw,
+               color = scenario_label,
+               group = scenario_label)) +
+    geom_line(size = 1) +
+    labs(
+      x = "Year (financial year ending 30-Jun-YYYY)",
+      y = "Total Capacity (GW)",
+      color = "Scenario"
+    ) +
+    theme_minimal() +
+    theme(
+      legend.position = "bottom",
+      legend.text = element_text(size = 9),
+      legend.title = element_text(size = 10, face = "bold"),
+      plot.title = element_text(size = 12, face = "bold"),
+      axis.title = element_text(size = 10),
+      axis.text = element_text(size = 9)
+    ) +
+    scale_y_continuous(labels = scales::comma)
 
   return(p)
 }

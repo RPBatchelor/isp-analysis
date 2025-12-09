@@ -1,12 +1,13 @@
-
-
-
-
-
-
-
-
-
+################################################################################
+#
+# Scenario Comparison Helper Functions
+#
+# Functions for filtering and comparing multiple ISP scenarios dynamically
+#
+# Ryan Batchelor
+# 1 December 2025
+#
+################################################################################
 
 
 #' Filter ISP data for multiple scenario combinations
@@ -17,15 +18,12 @@
 #' @param add_label Logical. If TRUE and scenario_label doesn't exist, creates one
 #'
 #' @return Filtered dataset with optional scenario_label column
-
-
-
 filter_scenarios <- function(data, scenarios, add_label = TRUE) {
 
   # Create scenario label if it doesn't exist
   if (add_label && !"scenario_label" %in% names(scenarios)) {
     scenarios <- scenarios |>
-      mutate(scenario_label = paste(source, scenario, cdp, sep = "_"))
+      mutate(scenario_label = paste(source, scenario, cdp, sep = " | "))
   }
 
   # Filter and join
@@ -43,28 +41,15 @@ filter_scenarios <- function(data, scenarios, add_label = TRUE) {
 }
 
 
-
-
-# Example usage:
-my_scenarios <- tibble(
-  source = c("2024_final", "2022_final", "2024_final", "2022_final"),
-  scenario = c("step change", "step change", "green energy exports", "progressive change"),
-  cdp = c("cdp14", "cdp8", "cdp14", "cdp8")
-)
-
-
-
-
-comparison_data <- filter_scenarios(isp_generator_capacity, my_scenarios)
-
-
-
-
-
-# ===== APPROACH 4: For Shiny - using user selections =====
-
 #' Build scenarios from user selections (for Shiny)
 #' Useful when users select scenarios through UI inputs
+#'
+#' @param sources Vector of source selections
+#' @param scenarios Vector of scenario selections
+#' @param cdps Vector of CDP selections
+#' @param labels Optional vector of custom labels
+#'
+#' @return Tibble with scenario combinations and labels
 build_scenarios_from_selections <- function(sources, scenarios, cdps, labels = NULL) {
 
   # Ensure all vectors are same length
@@ -84,57 +69,20 @@ build_scenarios_from_selections <- function(sources, scenarios, cdps, labels = N
   if (!is.null(labels) && length(labels) == n) {
     result$scenario_label <- labels
   } else {
-    result$scenario_label <- paste(sources, scenarios, cdps, sep = "_")
+    result$scenario_label <- paste(sources, scenarios, cdps, sep = " | ")
   }
 
   return(result)
 }
 
-# Example: Simulating Shiny inputs
-user_selected_sources <- c("2024_final", "2022_final", "2024_final")
-user_selected_scenarios <- c("step change", "step change", "green energy exports")
-user_selected_cdps <- c("cdp14", "cdp8", "cdp14")
-user_labels <- c("2024 Step Change", "2022 Step Change", "2024 Green")
 
-user_scenarios <- build_scenarios_from_selections(
-  user_selected_sources,
-  user_selected_scenarios,
-  user_selected_cdps,
-  user_labels
-)
-
-comparison_data <- filter_scenarios(isp_generator_capacity, user_scenarios)
-
-
-
-
-
-
-
-#-----------------
-
-
-data <- comparison_data |> 
-  group_by(region, year, unit, scenario, source, cdp, year_ending, odp, scenario_label) |> 
-  summarise(value = sum(value)) |> 
-  ungroup()
-
-p <- data |> 
-  ggplot() +
-  geom_line(aes(x = year, y = value, colour = scenario_label),
-            size = 1.2) + 
-  labs(x = "year",
-       y = "capacity (mw)") + 
-  facet_wrap(~region)
-
-
-p
-
-
-
-
-
-
-
-
-
+#' Get all available scenario combinations from a dataset
+#'
+#' @param data The ISP dataset
+#'
+#' @return Tibble of unique source/scenario/cdp combinations
+get_available_scenarios <- function(data) {
+  data |>
+    distinct(source, scenario, cdp) |>
+    arrange(source, scenario, cdp)
+}
