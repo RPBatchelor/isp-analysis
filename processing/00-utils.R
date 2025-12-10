@@ -120,15 +120,18 @@ util_table <- bind_cols(tech_list,
 isp_list <- c("2018_final",
               "2020_final",
               "2022_final",
-              "2024_final")
+              "2024_final",
+              "2026_draft")
 
 odp_list <- list <- c("default",
                  "dp1",
                  "cdp8",
-                 "cdp14")
+                 "cdp14",
+                 "cdp4")
 
 scenario_list <- c("neutral scenario",
               "central",
+              "step change",
               "step change",
               "step change")
 
