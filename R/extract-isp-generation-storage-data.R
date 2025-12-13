@@ -14,16 +14,16 @@ read_isp_capacity_generation <- function(path = path,
   
   raw <- readxl::read_xlsx(path = path,
                            sheet = sheet,
-                           range = range) |> 
+                           range = range) |>
     clean_names() |>
-    drop_na(cdp) |> 
-    pivot_longer(cols = starts_with("x"), names_to = "year", values_to = "value") |> 
+    drop_na(cdp) |>
+    pivot_longer(cols = starts_with("x"), names_to = "year", values_to = "value") |>
     mutate(year = str_remove(year, "x"),
            value = round(as.numeric(value), digits = 1),
            unit = output_unit,
-           scenario = scenario, 
-           source = source_data, 
-           cdp = cdp)
+           scenario = scenario,
+           source = source_data,
+           cdp = str_trim(str_remove(cdp, regex("\\s*\\(odp\\)", ignore_case = TRUE))))
   
   return(raw)
   

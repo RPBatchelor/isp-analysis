@@ -18,7 +18,9 @@ run_all_r_scripts("R", cleanup = FALSE)
 
 
 #----- 2. PROCESSING -----------------------------------------------------------
-run_all_r_scripts("processing", cleanup = FALSE)
+run_all_r_scripts("processing", 
+                  cleanup = FALSE, 
+                  suppress_messages = FALSE)
 
 
 #----- 3. ANALYSIS -------------------------------------------------------------
@@ -35,10 +37,3 @@ rsconnect::writeManifest(appDir = "shiny-webtool")
 
 
 
-
-# data_files <- list.files("shiny-webtool/data", full.names = TRUE,
-#                          pattern = "\\.rda$")
-# 
-# for (d in data_files){
-#   load(d)
-# }
