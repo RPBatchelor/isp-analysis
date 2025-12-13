@@ -3816,7 +3816,7 @@
   },
   "files": {
     "app.r": {
-      "checksum": "6e2f9913f01989642b79da40a6952ff6"
+      "checksum": "016aee4230d2a6a6ccced097ade46782"
     },
     "brand/_brand.yml": {
       "checksum": "51a46f49a18b49be047e16fd1500a932"
@@ -3831,40 +3831,40 @@
       "checksum": "b120d6ac73b53d2368aee6e997f3ebb9"
     },
     "data/isp_emissions.rda": {
-      "checksum": "a4c7f047a07a7984caf66084ce3e65fb"
+      "checksum": "1dd9b8d63c35beebdf9a316f00841fe6"
     },
     "data/isp_generation_output.rda": {
-      "checksum": "1e1c223d11ca12ad1bb9791d4fa73da5"
+      "checksum": "c5f515963b619449364212a51b231afc"
     },
     "data/isp_generator_capacity.rda": {
-      "checksum": "2df1adad7d8055e6904e8f77bde2152e"
+      "checksum": "1ad866364f2d76933fa187b18ee56e42"
     },
     "data/isp_retirements.rda": {
-      "checksum": "77e25fb2d018b3bed1076243884edd54"
+      "checksum": "e0527303b1d5435bb37fc2d66e5bb236"
     },
     "data/isp_source_list.rda": {
-      "checksum": "da2400fb59df8d8f248b07f22c454a49"
+      "checksum": "1bce8caad6d7315b9c28ed471614947d"
     },
     "data/isp_storage_capacity.rda": {
-      "checksum": "de61e5479816dcb1a8b732b3b1f5c5e8"
+      "checksum": "8ef4b85f8a43b942dec24c36425db85f"
     },
     "data/isp_storage_output.rda": {
-      "checksum": "d6ccbe6b9ac4c3cc0d959178a834564c"
+      "checksum": "574022097ac0e96ef1883262b09b62a4"
     },
     "data/odp_table.rda": {
-      "checksum": "bf02a9cc95ab6bc8cba0667be0737bfd"
+      "checksum": "c8feb35aa97ce52972edf2c78e9aeb6a"
     },
     "data/region_list.rda": {
-      "checksum": "a88927f5cd35df4b52458fa3bf9ae3b0"
+      "checksum": "ec221904ead8d0047114b63301d650a1"
     },
     "data/source_scenario_pathway_list.rda": {
-      "checksum": "bb2042adff9073064a2484f24a51164b"
+      "checksum": "01c360198885077b78cfaa6739c8227a"
     },
     "data/storage_util_table.rda": {
       "checksum": "cb32956f9753c477c877fecd3cfc4c05"
     },
     "data/util_table.rda": {
-      "checksum": "0ba5e19e8b792dfcda7c2ad3a6aaf9e9"
+      "checksum": "b5cd044104965923f29680fc8e91dbe2"
     },
     "other.R": {
       "checksum": "4a11c7124b967ed9299e53b48687b14a"
@@ -3873,10 +3873,16 @@
       "checksum": "87bbd2c08256fd80ab29e1180e4e7116"
     },
     "R/generate_charts.R": {
-      "checksum": "3dee56413df8cbe2367d0379e84dd00b"
+      "checksum": "5bf6e1128aa17cf9cb6924afedc3833e"
     },
     "R/get_active_tab_info.R": {
-      "checksum": "918e0e108b829ca26670805e960b9dc4"
+      "checksum": "be2629d8c6a744def0c78b76d52b62d1"
+    },
+    "R/home_content.R": {
+      "checksum": "e813a54ec81aea6a2b4346aa92fcf0bc"
+    },
+    "R/scenario_comparison_helpers.R": {
+      "checksum": "1b7dab530e80a4822da61100b6f9bf60"
     }
   },
   "users": null
