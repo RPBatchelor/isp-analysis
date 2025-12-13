@@ -27,7 +27,28 @@ script_units <- "Mt CO2-e"
 
 
 
-# ----- Retirements (MW) ----------------------------------------------
+# ----- Emissions (Mt CO2-e) ----------------------------------------------
+
+# 2026 Draft
+list_files <- list.files("raw-data/2026_draft/Cores/", pattern = ".xlsx")
+
+all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-data/2026_draft/Cores/", .x),
+                                                          sheet = "Emissions",
+                                                          range = "A3:AA146",  
+                                                          scenario = str_extract(.x,
+                                                                                 pattern = "-\\D*-"),
+                                                          output_unit = script_units,
+                                                          source_data = "2026_draft"))
+
+combined_2026_draft <- bind_rows(all_data) |>
+  mutate(year = str_replace(year, "_", "-"),
+         scenario = str_trim(str_remove_all(scenario, "-"))) |>
+  mutate(year_ending = dmy(paste0("30-Jun-", substr(year, 6,7)))) |>
+  mutate(scenario = str_to_lower(scenario)) |>
+  group_by(cdp, region, year, unit, scenario, source, year_ending) |>
+  summarise(value = sum(value)) |>
+  ungroup()
+
 
 # 2024 Final
 list_files <- list.files("raw-data/2024_final/Core/", pattern = ".xlsx")
@@ -154,7 +175,8 @@ combined_2020_final <- bind_rows(all_data, counterfactual) |>
 # Combine the data files together and make final tidy up
 isp_emissions <- bind_rows(combined_2024_final,
                            combined_2022_final,
-                           combined_2020_final) |>  
+                           combined_2020_final,
+                           combined_2026_draft) |>  
   mutate(scenario = str_to_lower(scenario),
          cdp = str_to_lower(cdp)) |>  
   mutate(year = as.numeric(year(year_ending))) |> 
@@ -163,6 +185,7 @@ isp_emissions <- bind_rows(combined_2024_final,
     source == "2020_final" & cdp == "dp1" ~ TRUE,
     source == "2022_final" & cdp == "cdp8" ~ TRUE,
     source == "2024_final" & cdp == "cdp14" ~ TRUE,
+    source == "2026_draft" & cdp == "cdp4" ~ TRUE,
     .default = FALSE
   ))
 
@@ -174,6 +197,11 @@ write_csv(isp_emissions,
 rm(combined_2024_final,
    combined_2022_final,
    combined_2020_final,
-   all_data)
+   combined_2026_draft,
+   all_data,
+   counterfactual,
+   list_files,
+   scenarios,
+   loop_2020)
 
 

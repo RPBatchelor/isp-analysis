@@ -14,23 +14,45 @@
 
 # 01. Generator capacity (MW) 
 # 02. Generation capacity (GWh) 
-# 03. Storage capacity (MW) 
-# 04. Storage output (GWh) (***This file***)
+# 03. Storage capacity (MW) (***This file***)
+# 04. Storage output (GWh)
 # 05. Retirements (MW)
 
 # ----- 00. Script drivers -----------------------------------------------------
 
-script_units <- "GWh"
+script_units <- "MW"
+
 
 
 
 # ----- Storage capacity (MW) ----------------------------------------------
 
+# 2026 draft
+list_files <- list.files("raw-data/2026_draft/Cores/", pattern = ".xlsx")
+
+all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-data/2026_draft/Cores/", .x),
+                                                          sheet = "Storage Capacity",
+                                                          range = "A3:AB2354",
+                                                          scenario = str_extract(.x,
+                                                                                 pattern = "-\\D*-"),
+                                                          output_unit = script_units,
+                                                          source_data = "2026_draft"))
+
+combined_2026_draft <- bind_rows(all_data) |> 
+  mutate(year = str_replace(year, "_", "-"),
+         scenario = str_trim(str_remove_all(scenario, "-"))) |> 
+  mutate(year_ending = dmy(paste0("30-Jun-", substr(year, 6,7)))) |> 
+  mutate(scenario = str_to_lower(scenario)) |> 
+  group_by(cdp, region, storage_category, year, unit, scenario, source, year_ending) |> 
+  summarise(value = sum(value)) |> 
+  ungroup()
+
+
 # 2024 Final
 list_files <- list.files("raw-data/2024_final/Core/", pattern = ".xlsx")
 
 all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-data/2024_final/Core/", .x),
-                                                          sheet = "Storage Energy",
+                                                          sheet = "Storage Capacity",
                                                           range = "A3:AF2082",
                                                           scenario = str_extract(.x,
                                                                                  pattern = "-\\D*-"),
@@ -42,7 +64,6 @@ combined_2024_final <- bind_rows(all_data) |>
          scenario = str_trim(str_remove_all(scenario, "-"))) |> 
   mutate(year_ending = dmy(paste0("30-Jun-", substr(year, 6,7)))) |> 
   mutate(scenario = str_to_lower(scenario)) |> 
-  rename(storage_category = technology) |> 
   group_by(cdp, region, storage_category, year, unit, scenario, source, year_ending) |> 
   summarise(value = sum(value)) |> 
   ungroup()
@@ -54,7 +75,7 @@ combined_2024_final <- bind_rows(all_data) |>
 list_files <- list.files("raw-data/2022_final/Final ISP Results/Scenarios/", pattern = ".xlsx")
 
 all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-data/2022_final/Final ISP Results/Scenarios/", .x),
-                                                          sheet = "Storage Energy",
+                                                          sheet = "Storage Capacity",
                                                           range = "A3:AE312",
                                                           scenario = str_extract(.x,
                                                                                  pattern = "-\\D*-"),
@@ -64,8 +85,7 @@ all_data <- map(list_files, ~read_isp_capacity_generation(path = paste0("raw-dat
 combined_2022_final <- bind_rows(all_data) |> 
   mutate(scenario = str_trim(str_remove_all(scenario, "-"))) |> 
   mutate(year_ending = dmy(paste0("30-Jun-", substr(year, 3,4)))) |> 
-  mutate(scenario = str_to_lower(scenario)) |> 
-  rename(storage_category = technology)
+  mutate(scenario = str_to_lower(scenario))
 
 
 
@@ -102,7 +122,7 @@ all_data <- pmap(list(list_files$file_path,
                       list_files$cdp),
                  function(file_path, scenario, cdp){
                    read_isp_capacity_generation_2020(path = file_path, 
-                                                     sheet = "StorageGeneration_2",
+                                                     sheet = "StorageCapacity_2",
                                                      range = "A3:W48",
                                                      scenario = scenario,
                                                      cdp = cdp,
@@ -124,7 +144,7 @@ counterfactual <- pmap(list(list_files$file_path,
                             list_files$cdp),
                        function(file_path, scenario, cdp){
                          read_isp_capacity_generation_2020(path = file_path, 
-                                                           sheet = "StorageGeneration_2",
+                                                           sheet = "StorageCapacity_1",
                                                            range = "A3:W48",
                                                            scenario = scenario,
                                                            cdp = cdp,
@@ -152,10 +172,10 @@ combined_2020_final <- bind_rows(all_data, counterfactual) |>
 
 # 2018 has some other transmission files we want to remove
 # list_files <- list.files("raw-data/2018_final/2018 ISP Generation and Transmission Outlooks/", 
-#                        pattern = ".xlsx") |> 
-# as_tibble() |> 
-# filter(!str_detect(value, "Transmission")) |> 
-# pull(value)
+  #                        pattern = ".xlsx") |> 
+  # as_tibble() |> 
+  # filter(!str_detect(value, "Transmission")) |> 
+  # pull(value)
 
 
 # all_data <- map(list_files, ~read_isp_capacity_generation_2018(path = paste0("raw-data/2018_final/2018 ISP Generation and Transmission Outlooks/", .x),
@@ -179,9 +199,10 @@ combined_2020_final <- bind_rows(all_data, counterfactual) |>
 
 
 # Combine the data files together and make final tidy up
-isp_storage_output <- bind_rows(combined_2020_final,
-                                combined_2022_final,
-                                combined_2024_final) |>  
+isp_storage_capacity <- bind_rows(combined_2020_final,
+                                  combined_2022_final,
+                                  combined_2024_final,
+                                  combined_2026_draft) |>  
   mutate(storage_category = str_to_lower(storage_category),
          scenario = str_to_lower(scenario),
          cdp = str_to_lower(cdp)) |>  
@@ -195,20 +216,22 @@ isp_storage_output <- bind_rows(combined_2020_final,
     source == "2020_final" & cdp == "dp1" ~ TRUE,
     source == "2022_final" & cdp == "cdp8" ~ TRUE,
     source == "2024_final" & cdp == "cdp14" ~ TRUE,
+    source == "2026_draft" & cdp == "cdp4" ~ TRUE,
     .default = FALSE
   ))
 
 
-save(isp_storage_output, file = "shiny-webtool/data/isp_storage_output.rda", compress = "xz")
-write_csv(isp_storage_output,
-          file = "data/isp_storage_output.csv")
+save(isp_storage_capacity, file = "shiny-webtool/data/isp_storage_capacity.rda", compress = "xz")
+write_csv(isp_storage_capacity,
+          file = "data/isp_storage_capacity.csv")
 
 rm(#combined_2018_final, 
-  combined_2020_final, 
-  combined_2022_final, 
-  combined_2024_final, 
-  all_data, 
-  counterfactual)
+   combined_2020_final, 
+   combined_2022_final, 
+   combined_2024_final, 
+   combined_2026_draft,
+   all_data, 
+   counterfactual)
 rm(list_files, scenarios, loop_2020)
 
 

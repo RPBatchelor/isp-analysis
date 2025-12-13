@@ -28,6 +28,8 @@ generate_welcome_content <- function() {
           h3("Welcome to the ISP Analyser", style = "margin: 0; color: white; font-size: 1.5rem;")
         ),
         card_body(
+          h4("This app is in active development - some functionality may not be available"),
+          hr(),
           h4("Interactive Analysis of Australia's Integrated System Plan"),
           p("This tool provides the ability to explore and analyse generation, storage, and emissions data 
             projections from the Australian Energy Market Operator's (AEMO) Integrated System Plan (ISP)."),

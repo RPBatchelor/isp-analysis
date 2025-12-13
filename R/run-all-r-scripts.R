@@ -12,8 +12,11 @@
 #' @param suppress_messages whether messages should be suppressed or not. Sometimes messages can be overwhelming.
 #' @author Peter Ellis
 #' @export
-run_all_r_scripts <- function(path, recursive = TRUE, verbose = TRUE, 
-                              push_through = FALSE, cleanup = TRUE,
+run_all_r_scripts <- function(path, 
+                              recursive = TRUE, 
+                              verbose = TRUE, 
+                              push_through = FALSE, 
+                              cleanup = TRUE,
                               suppress_messages = TRUE){
   if(cleanup & !exists("keepers")){
     keepers <- NULL
