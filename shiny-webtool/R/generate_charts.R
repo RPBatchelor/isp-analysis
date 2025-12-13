@@ -47,7 +47,7 @@ generate_generation_capacity_chart <- function(data,
          caption = glue("Source: {source}"),
          x = "Year (financial year ending 30-jun-YYYY)",
          y = "Capacity (GW)") +
-    theme_minimal(base_family = "Arial") +
+    theme_minimal() +
     theme(panel.grid.major.y = element_blank(),
           panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
           panel.grid.minor.x = element_blank(),
@@ -124,7 +124,7 @@ generate_generation_output_chart <- function(data,
          caption = glue("Source: {source}"),
          x = "Year (financial year ending 30-jun-YYYY)",
          y = "Output (GWh)") +
-    theme_minimal(base_family = "Arial") +
+    theme_minimal() +
     theme(panel.grid.major.y = element_blank(),
           panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
           panel.grid.minor.x = element_blank(),
