@@ -30,7 +30,7 @@
 # generation output data, plus mid-merit gas with ccs and hydrogen turbine
 # which appear in earlier ISPs and may return in future projections.
 
-isp_tech_crosswalk <- tribble(
+isp_tech_crosswalk <- tibble::tribble(
   ~raw_name,                               ~coerced_tech_cat,
 
   # ── ISP 2026 canonical names (self-mapping) ──────────────────────────────
@@ -114,7 +114,7 @@ isp_tech_crosswalk <- tribble(
 # used "shallow/medium/deep storage".  Snowy 2.0, Borumba, coordinated/passive
 # CER storage are self-mapping.
 
-isp_storage_crosswalk <- tribble(
+isp_storage_crosswalk <- tibble::tribble(
   ~raw_name,                              ~coerced_storage_cat,
 
   # ── ISP 2026 canonical storage categories (self-mapping) ─────────────────
