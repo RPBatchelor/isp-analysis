@@ -25,10 +25,10 @@
 #----- 1. Download the generation and storage data files ------------------------
 
 # 2026
-# url <- "TBC"
+# url <- "https://www.aemo.com.au/-/media/files/major-publications/isp/draft-2026/draft-2026-isp-generation-and-storage-outlook.zip?rev=3ca832a1fdb94b96bce3dd23bd12391f&sc_lang=en"
 # download_if_fresh(url, destfile = "raw-data/2026_draft/gen_storage.zip")
 # unzip("raw-data/2026_draft/gen_storage.zip",
-#       exdir = "raw-data/2026_draft/")
+      # exdir = "raw-data/2026_draft/")
 
 # 2024
 url <- "https://aemo.com.au/-/media/files/major-publications/isp/2024/supporting-materials/2024-isp-generation-and-storage-outlook.zip?la=en"
@@ -53,5 +53,7 @@ url <- "https://aemo.com.au/-/media/files/electricity/nem/planning_and_forecasti
 download_if_fresh(url, destfile = "raw-data/2018_final/gen_storage.zip")
 unzip("raw-data/2018_final/gen_storage.zip",
       exdir = "raw-data/2018_final/")
+
+
 
 

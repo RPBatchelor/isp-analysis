@@ -43,6 +43,29 @@ for (f in r_files){
 
 
 
+# ===== 03. Pre-process historical generation data =============================
+#
+# Computed once globally (not inside server) from nem_historical_network_data.
+# Mapped to ISP 2026 canonical technology names via the crosswalk so it can be
+# combined directly with isp_generation_output when the user enables the toggle.
+
+hist_gen_energy <- nem_historical_network_data |>
+  filter(metric == "energy") |>
+  mutate(
+    month          = month(period_start),
+    fy_year        = year(period_start),
+    financial_year = if_else(month >= 7L, fy_year + 1L, fy_year),
+    value_gwh      = value / 1000,
+    region         = str_remove(network_region, "1$")
+  ) |>
+  filter(financial_year >= 2010, financial_year <= 2025) |>
+  add_coerced_tech_cat(col = "fueltech") |>
+  filter(!str_detect(coerced_tech_cat, "load")) |>
+  rename(technology = coerced_tech_cat) |>
+  left_join(util_table |> select(technology, dispatchable), by = "technology") |>
+  mutate(technology = factor(technology, levels = util_table$technology))
+
+
 # Load brand configuration
 brand_config <- yaml::read_yaml("./brand/_brand.yml")
 brand_colors <- brand_config$color$palette
@@ -511,10 +534,46 @@ ui <- tagList(
   nav_panel(
     title = "Settings",
     value = "settings",
-    card(
-      card_header("Settings page"),
-      card_body(
-        "CARD BODY"
+    layout_columns(
+      col_widths = c(4),
+      fill = FALSE,
+      card(
+        full_screen = FALSE,
+        card_header(class = "bg-dark", "Charting options"),
+        card_body(
+          input_switch(
+            id    = "show_historical",
+            label = "Show historical data",
+            value = FALSE
+          ),
+          p(
+            "When enabled, historical NEM generation data from OpenNEM ",
+            "(FY2010\u2013FY2025) is overlaid on generation output charts ",
+            "alongside ISP projections.",
+            class = "text-muted small mt-2"
+          ),
+          conditionalPanel(
+            condition = "input.show_historical == true",
+            hr(class = "mt-3 mb-2"),
+            radioButtons(
+              inputId  = "truncate_side",
+              label    = "Overlap handling",
+              choices  = c(
+                "Truncate historical data" = "truncate_historical",
+                "Truncate ISP projection"  = "truncate_projection"
+              ),
+              selected = "truncate_historical"
+            ),
+            p(
+              tags$b("Truncate historical:"),
+              " historical data is cut off before the first ISP projection year.",
+              tags$br(),
+              tags$b("Truncate projection:"),
+              " ISP projection starts after the last historical year.",
+              class = "text-muted small mt-1"
+            )
+          )
+        )
       )
     )
   )
@@ -850,22 +909,51 @@ server <- function(input, output, session){
 
   # =---- 1.2 Generator output chart -----------------------------------------
   
-  #Reactive data for the generation capacity chart
+  #Reactive data for the generation output chart
   chart_data_gen_output <- reactive({
     req(input$source, input$scenario, input$pathway, input$technology, input$region)
-    
-    isp_generation_output |>
+
+    isp_data <- isp_generation_output |>
       filter(source == input$source,
              scenario == input$scenario,
              cdp == input$pathway,
              technology %in% input$technology,
              region %in% input$region) |>
-      left_join(util_table, by = c("technology" = "technology")) |>
-      mutate(technology = factor(technology, levels = util_table$technology)) |> 
-    # Require group by to remove the breakdown of tech by state displayed on the chart - show as contiguous
-      group_by(technology, year, scenario, source, cdp, year_ending, odp, dispatchable) |> 
-      summarise(value = sum(value)) |> 
-      ungroup() 
+      left_join(util_table, by = "technology") |>
+      mutate(technology = factor(technology, levels = util_table$technology)) |>
+      # Group by to sum across states when multiple regions selected
+      group_by(technology, year, scenario, source, cdp, year_ending, odp, dispatchable) |>
+      summarise(value = sum(value), .groups = "drop")
+
+    if (!isTRUE(input$show_historical)) return(isp_data)
+
+    # Historical leg: filter to selected regions and technologies, sum across regions
+    hist_data <- hist_gen_energy |>
+      filter(region %in% input$region,
+             as.character(technology) %in% input$technology) |>
+      group_by(technology, year = financial_year, dispatchable) |>
+      summarise(value = sum(value_gwh), .groups = "drop") |>
+      mutate(
+        scenario    = "historical",
+        source      = "opennem",
+        cdp         = "actual",
+        year_ending = as.Date(paste0(year, "-06-30")),
+        odp         = FALSE
+      )
+
+    # Apply truncation to avoid double-counting overlapping years
+    isp_start_year <- min(isp_data$year, na.rm = TRUE)
+    hist_last_year <- max(hist_data$year, na.rm = TRUE)
+
+    if (isTRUE(input$truncate_side == "truncate_projection")) {
+      isp_data <- isp_data |> filter(year > hist_last_year)
+    } else {
+      # Default: truncate historical to years before the ISP projection starts
+      hist_data <- hist_data |> filter(year < isp_start_year)
+    }
+
+    bind_rows(hist_data, isp_data) |>
+      mutate(technology = factor(technology, levels = util_table$technology))
   })
   
   
