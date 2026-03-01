@@ -20,6 +20,7 @@ library(thematic)
 library(scales)
 library(glue)
 library(yaml)
+library(brand.yml)
 
 
 
