@@ -23,18 +23,24 @@
 #'
 #' @return A ggplot object
 
-generate_generation_capacity_chart <- function(data, 
-                                               scenario, 
+generate_generation_capacity_chart <- function(data,
+                                               scenario,
                                                source,
                                                show_dispatchable = FALSE,
                                                show_total = FALSE,
                                                util_table) {
 
+  # Dispatchable at bottom of stack, non-dispatchable on top
+  tech_order <- util_table |>
+    mutate(row = row_number()) |>
+    arrange(dispatchable, row) |>
+    pull(technology)
+
   p <- data |>
     ggplot() +
     geom_bar(aes(x = year,
                  y = value_gw,
-                 fill = reorder(technology, -as.numeric(technology))),
+                 fill = factor(technology, levels = tech_order)),
              position = "stack",
              stat = "identity",
              show.legend = TRUE) +
@@ -100,29 +106,54 @@ generate_generation_capacity_chart <- function(data,
 #' @param util_table Utility table with technology colors
 #'
 #' @return A ggplot object
-generate_generation_output_chart <- function(data, 
-                                             scenario, 
+generate_generation_output_chart <- function(data,
+                                             scenario,
                                              source,
                                              show_dispatchable = FALSE,
                                              show_total = FALSE,
                                              util_table) {
 
-  p <- data |>
-    ggplot() +
+  # Dispatchable at bottom of stack, non-dispatchable on top
+  tech_order <- util_table |>
+    mutate(row = row_number()) |>
+    arrange(dispatchable, row) |>
+    pull(technology)
+
+  has_historical <- "opennem" %in% data$source
+
+  all_years  <- sort(unique(data$year))
+  x_breaks   <- if (length(all_years) > 15) {
+    seq(min(all_years), max(all_years), by = 5)
+  } else {
+    all_years
+  }
+
+  p <- ggplot(data)
+
+  # Shaded background for historical period (drawn first, behind bars)
+  if (has_historical) {
+    transition_year <- min(data$year[data$source != "opennem"], na.rm = TRUE) - 0.5
+    p <- p +
+      annotate("rect",
+               xmin = -Inf, xmax = transition_year,
+               ymin = -Inf, ymax = Inf,
+               fill = "gray92", alpha = 1)
+  }
+
+  p <- p +
     geom_bar(aes(x = year,
                  y = value,
-                 fill = reorder(technology, -as.numeric(technology))),
+                 fill = factor(technology, levels = tech_order)),
              position = "stack",
              stat = "identity",
              show.legend = TRUE) +
     scale_y_continuous(labels = label_number(scale = 1)) +
     scale_fill_manual(values = setNames(util_table$colour_label, util_table$technology)) +
-    scale_x_continuous(breaks = unique(data$year),
-                       labels = unique(data$year)) +
+    scale_x_continuous(breaks = x_breaks, labels = x_breaks) +
     labs(fill = "Technology",
          subtitle = glue("{scenario} scenario"),
          caption = glue("Source: {source}"),
-         x = "Year (financial year ending 30-jun-YYYY)",
+         x = "Year (financial year ending 30-Jun-YYYY)",
          y = "Output (GWh)") +
     theme_minimal() +
     theme(panel.grid.major.y = element_blank(),
@@ -133,9 +164,28 @@ generate_generation_output_chart <- function(data,
           plot.background = element_rect(fill = "white"),
           axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
 
-  if(show_dispatchable){
+  # Divider and labels separating historical actuals from ISP projections
+  if (has_historical) {
+    y_label <- max(
+      data |> group_by(year) |> summarise(tot = sum(value, na.rm = TRUE)) |> pull(tot),
+      na.rm = TRUE
+    )
+    p <- p +
+      geom_vline(xintercept = transition_year,
+                 linetype = "dashed", colour = "gray50", linewidth = 0.6) +
+      annotate("text",
+               x = transition_year - 0.5, y = y_label,
+               label = "Historical\nactuals", hjust = 1, vjust = 1,
+               size = 3, colour = "gray40", fontface = "italic") +
+      annotate("text",
+               x = transition_year + 0.5, y = y_label,
+               label = "ISP projection", hjust = 0, vjust = 1,
+               size = 3, colour = "gray40", fontface = "italic")
+  }
+
+  if (show_dispatchable) {
     d2 <- data |>
-      filter(dispatchable == T) |>
+      filter(dispatchable == TRUE) |>
       group_by(year) |>
       summarise(value = sum(value)) |>
       ungroup()
@@ -149,18 +199,19 @@ generate_generation_output_chart <- function(data,
                 show.legend = FALSE)
   }
 
-  if(show_total){
+  if (show_total) {
     d3 <- data |>
       group_by(year) |>
       summarise(value = sum(value)) |>
-      ungroup()
+      ungroup() |>
+      mutate(label_text = scales::comma(round(value, 1)),
+             label_y = value + max(value) * 0.03)
 
     p <- p +
       geom_text(data = d3,
-                aes(x = year,
-                    y = value,
-                    label = scales::comma(round(value, 1))),
-                nudge_y = 4, size = 3, colour = "gray30")
+                aes(x = year, y = label_y, label = label_text),
+                size = 3, colour = "gray30",
+                inherit.aes = FALSE)
   }
 
   return(p)
@@ -176,16 +227,22 @@ generate_generation_output_chart <- function(data,
 #'
 #' @return A ggplot object
 
-generate_generation_net_additions_chart <- function(data, 
-                                                    scenario, 
-                                                    source, 
+generate_generation_net_additions_chart <- function(data,
+                                                    scenario,
+                                                    source,
                                                     util_table) {
+
+  # Dispatchable at bottom of stack, non-dispatchable on top
+  tech_order <- util_table |>
+    mutate(row = row_number()) |>
+    arrange(dispatchable, row) |>
+    pull(technology)
 
   p <- data |>
     ggplot() +
     geom_bar(aes(x = year,
                  y = net_capacity_added,
-                 fill = reorder(technology, -as.numeric(technology))),
+                 fill = factor(technology, levels = tech_order)),
              position = "stack",
              stat = "identity",
              show.legend = TRUE) +
@@ -222,18 +279,24 @@ generate_generation_net_additions_chart <- function(data,
 #'
 #' @return A ggplot object
 
-generate_storage_capacity_chart <- function(data, 
-                                            scenario, 
+generate_storage_capacity_chart <- function(data,
+                                            scenario,
                                             source,
                                             show_dispatchable = FALSE,
                                             show_total = FALSE,
                                             storage_util_table) {
 
+  # Dispatchable at bottom of stack, non-dispatchable on top
+  storage_order <- storage_util_table |>
+    mutate(row = row_number()) |>
+    arrange(dispatchable, row) |>
+    pull(storage_category)
+
   p <- data |>
     ggplot() +
     geom_bar(aes(x = year,
                  y = value_gw,
-                 fill = reorder(storage_category, -as.numeric(storage_category))),
+                 fill = factor(storage_category, levels = storage_order)),
              position = "stack",
              stat = "identity",
              show.legend = TRUE) +
@@ -300,18 +363,24 @@ generate_storage_capacity_chart <- function(data,
 #'
 #' @return A ggplot object
 
-generate_storage_output_chart <- function(data, 
-                                          scenario, 
+generate_storage_output_chart <- function(data,
+                                          scenario,
                                           source,
                                           show_dispatchable = FALSE,
                                           show_total = FALSE,
                                           storage_util_table) {
 
+  # Dispatchable at bottom of stack, non-dispatchable on top
+  storage_order <- storage_util_table |>
+    mutate(row = row_number()) |>
+    arrange(dispatchable, row) |>
+    pull(storage_category)
+
   p <- data |>
     ggplot() +
     geom_bar(aes(x = year,
                  y = value,
-                 fill = reorder(storage_category, -as.numeric(storage_category))),
+                 fill = factor(storage_category, levels = storage_order)),
              position = "stack",
              stat = "identity",
              show.legend = TRUE) +
@@ -353,14 +422,17 @@ generate_storage_output_chart <- function(data,
     d3 <- data |>
       group_by(year) |>
       summarise(value = sum(value)) |>
-      ungroup()
+      ungroup() |>
+      mutate(label_text = scales::comma(round(value, 1)),
+             label_y = value + max(value) * 0.03)
 
     p <- p +
       geom_text(data = d3,
                 aes(x = year,
-                    y = value,
-                    label = scales::comma(round(value, 1))),
-                nudge_y = 4, size = 3, colour = "gray30")
+                    y = label_y,
+                    label = label_text),
+                size = 3, colour = "gray30",
+                inherit.aes = FALSE)
   }
 
   return(p)
@@ -381,11 +453,17 @@ generate_storage_net_additions_chart <- function(data,
                                                  source,
                                                  storage_util_table) {
 
+  # Dispatchable at bottom of stack, non-dispatchable on top
+  storage_order <- storage_util_table |>
+    mutate(row = row_number()) |>
+    arrange(dispatchable, row) |>
+    pull(storage_category)
+
   p <- data |>
     ggplot() +
     geom_bar(aes(x = year,
                  y = net_capacity_added,
-                 fill = reorder(storage_category, -as.numeric(storage_category))),
+                 fill = factor(storage_category, levels = storage_order)),
              position = "stack",
              stat = "identity",
              show.legend = TRUE) +

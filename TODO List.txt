@@ -1,0 +1,10 @@
+TODO List
+
+1. Add to global settings "Show historical data" - turn on/off
+
+2. Add "show only ODPs" to settings - turn on/off
+
+3. Add new charting functions to shiny app (e.g. historical data)
+
+
+

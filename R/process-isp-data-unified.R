@@ -329,12 +329,20 @@ process_all_isp_years <- function(data_type,
   # Apply final transformations
   message("Applying final transformations...")
 
-  # Apply name standardization
+  # Apply name standardization (normalises legacy spelling variants)
   if ("technology" %in% names(combined)) {
     combined <- standardize_technology_names(combined)
   }
   if ("storage_category" %in% names(combined)) {
     combined <- standardize_storage_names(combined)
+  }
+
+  # Add coerced category columns (maps all versions → ISP 2026 canonical names)
+  if ("technology" %in% names(combined)) {
+    combined <- add_coerced_tech_cat(combined, col = "technology")
+  }
+  if ("storage_category" %in% names(combined)) {
+    combined <- add_coerced_storage_cat(combined)
   }
 
   # Apply common transformations

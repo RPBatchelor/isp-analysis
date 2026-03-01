@@ -23,7 +23,7 @@ tech_list <- c("black coal",
                "utility-scale solar",
                "distributed pv",
                "peaking gas+liquids",
-               "utility storage load",
+               "utility-scale storage load",
                "coordinated cer storage load",
                "passive cer storage load",
                "rooftop and other small-scale solar")
@@ -49,7 +49,7 @@ colour_list <- c("#373A36",  # Black coal
                  "#FDD26E",  # Utility scale Solar
                  "#F8E08E",  # Distributed PV
                  "#3FB9C4",  # Peaking gas+liquids
-                 "#77C5D5",  # utility storage load
+                 "#77C5D5",  # utility-scale storage load
                  "#A3519B",  # coordinated cer storage load
                  "#DD9CDE",  # passive cer storage load
                  "#F8E08E")  # Rooftop and other small-scale solar   
@@ -75,7 +75,7 @@ dispatch_list <- c(TRUE,  # Black coal
                    FALSE, # Utility scale solar
                    FALSE, # Distributed PV
                    TRUE,  # Peaking gas+liquids
-                   TRUE,  # Utility storage load
+                   TRUE,  # Utility-scale storage load
                    TRUE,  # Coordinated CER storage load
                    FALSE, # Passive cer storage load
                    FALSE) # Rooftop and other small-scale solar
@@ -101,7 +101,7 @@ tech_type_list <- c("coal",      # Black coal
                     "renewable", # Utilitiy scale solar
                     "renewable", # Distributed PV
                     "gas",       # Peaking gas+liquids
-                    "storage",   # Utility storage load
+                    "storage",   # Utility-scale storage load
                     "storage",   # Coordinated CER storage load
                     "storage",   # Passive CER storage load
                     "renewable") # Rooftop and other small-scale solar
@@ -166,6 +166,7 @@ technology_name_map <- c(
   "coordinated der storage" = "coordinated cer storage",
   "utility solar" = "utility-scale solar",
   "utility storage" = "utility-scale storage",
+  "utility storage load" = "utility-scale storage load",
   "distributed storage" = "passive cer storage",
   "behind the meter storage" = "passive cer storage",
   "ccgt" = "mid-merit gas",
