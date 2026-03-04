@@ -174,11 +174,11 @@ generate_generation_output_chart <- function(data,
       geom_vline(xintercept = transition_year,
                  linetype = "dashed", colour = "gray50", linewidth = 0.6) +
       annotate("text",
-               x = transition_year - 0.5, y = y_label,
+               x = transition_year - 1.5, y = y_label,
                label = "Historical\nactuals", hjust = 1, vjust = 1,
                size = 3, colour = "gray40", fontface = "italic") +
       annotate("text",
-               x = transition_year + 0.5, y = y_label,
+               x = transition_year + 1.5, y = y_label,
                label = "ISP projection", hjust = 0, vjust = 1,
                size = 3, colour = "gray40", fontface = "italic")
   }
@@ -518,6 +518,241 @@ generate_scenario_comparison_chart <- function(data) {
       axis.text = element_text(size = 9)
     ) +
     scale_y_continuous(labels = scales::comma)
+
+  return(p)
+}
+
+
+#' Generate Total Emissions Area Chart
+#'
+#' @param data The chart data (output from chart_data_emissions reactive)
+#' @param scenario Scenario name for subtitle
+#' @param source Source name for caption
+#'
+#' @return A ggplot object
+generate_emissions_total_chart <- function(data, scenario, source) {
+
+  region_colors <- c(
+    "NEM" = "#2d2d2d",
+    "NSW" = "#5c4033",
+    "QLD" = "#8b6f47",
+    "SA"  = "#a0522d",
+    "TAS" = "#7a6457",
+    "VIC" = "#4a3c31"
+  )
+
+  has_historical <- "opennem" %in% data$source
+
+  all_years <- sort(unique(data$year))
+  x_breaks <- if (length(all_years) > 15) {
+    seq(min(all_years), max(all_years), by = 5)
+  } else {
+    all_years
+  }
+
+  p <- ggplot(data)
+
+  # Shaded background for historical period
+  if (has_historical) {
+    transition_year <- min(data$year[data$source != "opennem"], na.rm = TRUE) - 0.5
+    p <- p +
+      annotate("rect",
+               xmin = -Inf, xmax = transition_year,
+               ymin = -Inf, ymax = Inf,
+               fill = "gray92", alpha = 1)
+  }
+
+  p <- p +
+    geom_area(aes(x = year, y = value, fill = region),
+              alpha = 0.8, position = "stack") +
+    scale_fill_manual(values = region_colors) +
+    scale_y_continuous(labels = label_number(scale = 1)) +
+    scale_x_continuous(breaks = x_breaks, labels = x_breaks) +
+    labs(fill = "Region",
+         subtitle = glue("{scenario} scenario"),
+         caption = glue("Source: {source}"),
+         x = "Year (financial year ending 30-Jun-YYYY)",
+         y = "Emissions (Mt CO2-e)") +
+    theme_minimal() +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.x = element_blank(),
+          panel.background = element_rect(fill = "white"),
+          plot.background = element_rect(fill = "white"),
+          axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
+
+  # Divider and labels for historical vs projection
+  if (has_historical) {
+    y_label <- max(
+      data |> group_by(year) |> summarise(tot = sum(value, na.rm = TRUE)) |> pull(tot),
+      na.rm = TRUE
+    )
+    p <- p +
+      geom_vline(xintercept = transition_year,
+                 linetype = "dashed", colour = "gray50", linewidth = 0.6) +
+      annotate("text",
+               x = transition_year - 1.5, y = y_label,
+               label = "Historical\nactuals", hjust = 1, vjust = 1,
+               size = 3, colour = "gray40", fontface = "italic") +
+      annotate("text",
+               x = transition_year + 1.5, y = y_label,
+               label = "ISP projection", hjust = 0, vjust = 1,
+               size = 3, colour = "gray40", fontface = "italic")
+  }
+
+  return(p)
+}
+
+
+#' Generate Annual Change in Emissions Chart
+#'
+#' @param data The chart data (output from chart_data_emissions_change reactive)
+#' @param scenario Scenario name for subtitle
+#' @param source Source name for caption
+#'
+#' @return A ggplot object
+generate_emissions_change_chart <- function(data, scenario, source) {
+
+  region_colors <- c(
+    "NEM" = "#2d2d2d",
+    "NSW" = "#5c4033",
+    "QLD" = "#8b6f47",
+    "SA"  = "#a0522d",
+    "TAS" = "#7a6457",
+    "VIC" = "#4a3c31"
+  )
+
+  has_historical <- "opennem" %in% data$source
+
+  all_years <- sort(unique(data$year))
+  x_breaks <- if (length(all_years) > 15) {
+    seq(min(all_years), max(all_years), by = 5)
+  } else {
+    all_years
+  }
+
+  p <- ggplot(data)
+
+  if (has_historical) {
+    transition_year <- min(data$year[data$source != "opennem"], na.rm = TRUE) - 0.5
+    p <- p +
+      annotate("rect",
+               xmin = -Inf, xmax = transition_year,
+               ymin = -Inf, ymax = Inf,
+               fill = "gray92", alpha = 1)
+  }
+
+  p <- p +
+    geom_bar(aes(x = year, y = change, fill = region),
+             position = "stack", stat = "identity", show.legend = TRUE) +
+    geom_hline(yintercept = 0, colour = "gray30", linewidth = 0.4) +
+    scale_fill_manual(values = region_colors) +
+    scale_y_continuous(labels = label_number(scale = 1)) +
+    scale_x_continuous(breaks = x_breaks, labels = x_breaks) +
+    labs(fill = "Region",
+         subtitle = glue("{scenario} scenario"),
+         caption = glue("Source: {source}"),
+         x = "Year (financial year ending 30-Jun-YYYY)",
+         y = "Change in emissions (Mt CO2-e)") +
+    theme_minimal() +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.x = element_blank(),
+          panel.background = element_rect(fill = "white"),
+          plot.background = element_rect(fill = "white"),
+          axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
+
+  if (has_historical) {
+    y_range <- range(
+      data |> group_by(year) |>
+        summarise(pos = sum(change[change > 0], na.rm = TRUE),
+                  neg = sum(change[change < 0], na.rm = TRUE)) |>
+        tidyr::pivot_longer(c(pos, neg)) |> pull(value),
+      na.rm = TRUE
+    )
+    y_label <- y_range[2]
+    p <- p +
+      geom_vline(xintercept = transition_year,
+                 linetype = "dashed", colour = "gray50", linewidth = 0.6) +
+      annotate("text",
+               x = transition_year - 1.5, y = y_label,
+               label = "Historical\nactuals", hjust = 1, vjust = 1,
+               size = 3, colour = "gray40", fontface = "italic") +
+      annotate("text",
+               x = transition_year + 1.5, y = y_label,
+               label = "ISP projection", hjust = 0, vjust = 1,
+               size = 3, colour = "gray40", fontface = "italic")
+  }
+
+  return(p)
+}
+
+
+#' Generate Emissions Intensity Chart
+#'
+#' @param data The chart data (output from chart_data_emissions_intensity reactive)
+#' @param scenario Scenario name for subtitle
+#' @param source Source name for caption
+#'
+#' @return A ggplot object
+generate_emissions_intensity_chart <- function(data, scenario, source) {
+
+  has_historical <- "opennem" %in% data$source
+
+  all_years <- sort(unique(data$year))
+  x_breaks <- if (length(all_years) > 15) {
+    seq(min(all_years), max(all_years), by = 5)
+  } else {
+    all_years
+  }
+
+  p <- ggplot(data)
+
+  if (has_historical) {
+    transition_year <- min(data$year[data$source != "opennem"], na.rm = TRUE) - 0.5
+    p <- p +
+      annotate("rect",
+               xmin = -Inf, xmax = transition_year,
+               ymin = -Inf, ymax = Inf,
+               fill = "gray92", alpha = 1)
+  }
+
+  p <- p +
+    geom_line(aes(x = year, y = intensity),
+              colour = "#4a3c31", linewidth = 1) +
+    geom_point(aes(x = year, y = intensity),
+               colour = "#4a3c31", size = 2) +
+    scale_y_continuous(labels = label_number(scale = 1)) +
+    scale_x_continuous(breaks = x_breaks, labels = x_breaks) +
+    labs(subtitle = glue("{scenario} scenario"),
+         caption = glue("Source: {source}"),
+         x = "Year (financial year ending 30-Jun-YYYY)",
+         y = "Emissions intensity (kg CO2-e / MWh)") +
+    theme_minimal() +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_line(color = "gray", linewidth = 0.1),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.x = element_blank(),
+          panel.background = element_rect(fill = "white"),
+          plot.background = element_rect(fill = "white"),
+          axis.text.x = element_text(angle = 45, vjust = 1.2, hjust = 1))
+
+  if (has_historical) {
+    y_label <- max(data$intensity, na.rm = TRUE)
+    p <- p +
+      geom_vline(xintercept = transition_year,
+                 linetype = "dashed", colour = "gray50", linewidth = 0.6) +
+      annotate("text",
+               x = transition_year - 1.5, y = y_label,
+               label = "Historical\nactuals", hjust = 1, vjust = 1,
+               size = 3, colour = "gray40", fontface = "italic") +
+      annotate("text",
+               x = transition_year + 1.5, y = y_label,
+               label = "ISP projection", hjust = 0, vjust = 1,
+               size = 3, colour = "gray40", fontface = "italic")
+  }
 
   return(p)
 }

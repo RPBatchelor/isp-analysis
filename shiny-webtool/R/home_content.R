@@ -47,7 +47,7 @@ generate_welcome_content <- function() {
           p(
             icon("github"),
             " View the source code on ",
-            tags$a("GitHub", href = "https://github.com/RPBatchelor/isp-analysis", target = "_blank"),
+            tags$a("GitHub", href = "https://github.com/RPBatchelor/isp-analysis", target = "_blank")
           ),
           p(em("Last updated: 23 November 2025"))
         )
@@ -182,47 +182,105 @@ generate_scenario_descriptions_content <- function() {
       h3("ISP Scenario Descriptions", style = "margin: 0;")
     ),
     card_body(
-      p("This section describes the different scenarios modeled in the ISP, representing plausible futures for Australia's energy system."),
+      p("Each ISP release models a set of plausible future scenarios for Australia's energy system.",
+        "Within each scenario, AEMO evaluates multiple Candidate Development Paths (CDPs) and",
+        "selects one as the Optimal Development Path (ODP)."),
       hr(),
 
-      # Placeholder for scenario descriptions
-      h4("2024 ISP Scenarios"),
-
-      tags$div(
-        class = "mb-4",
-        h5(strong("Step Change")),
-        p("The Step Change scenario represents a future where Australia takes strong action on emissions reduction,
-          with high consumer energy resource uptake, coordinated policy, and rapid technology development.
-          This scenario sees accelerated decarbonization and significant grid transformation.")
-      ),
-
-      tags$div(
-        class = "mb-4",
-        h5(strong("Progressive Change")),
-        p("Progressive Change assumes moderate progress toward decarbonization with steady policy support.
-          Technology costs decline at expected rates and consumer adoption grows gradually.
-          This scenario represents a balanced pathway with measured grid transformation.")
-      ),
-
-      tags$div(
-        class = "mb-4",
-        h5(strong("Green Energy Exports")),
-        p("This scenario envisions Australia developing a major green hydrogen export industry alongside
-          domestic decarbonization. It features very high renewable energy deployment to support both
-          domestic consumption and export production, requiring significant grid expansion.")
-      ),
-
-      tags$div(
-        class = "mb-4",
-        h5(strong("Slow Change")),
-        p("Slow Change represents a future with delayed policy action and slower technology adoption.
-          Emissions reduction proceeds more gradually with less coordinated policy support.
-          Fossil fuel generation remains in the system longer as renewable deployment is more moderate.")
+      tags$table(
+        class = "table table-bordered table-hover",
+        style = "width: 100%; font-size: 1.1rem;",
+        tags$thead(
+          style = "background-color: #263A68; color: white;",
+          tags$tr(
+            tags$th("", style = "width: 18%;"),
+            tags$th("ISP 2020"),
+            tags$th("ISP 2022"),
+            tags$th("ISP 2024"),
+            tags$th("ISP 2026 (Draft)")
+          )
+        ),
+        tags$tbody(
+          tags$tr(
+            tags$td(strong("Scenarios")),
+            tags$td(
+              tags$ul(class = "mb-0 ps-3",
+                tags$li("Central"),
+                tags$li("Step Change"),
+                tags$li("Slow Change"),
+                tags$li("Fast Change"),
+                tags$li("High DER")
+              )
+            ),
+            tags$td(
+              tags$ul(class = "mb-0 ps-3",
+                tags$li("Step Change"),
+                tags$li("Progressive Change"),
+                tags$li("Slow Change"),
+                tags$li("Hydrogen Superpower")
+              )
+            ),
+            tags$td(
+              tags$ul(class = "mb-0 ps-3",
+                tags$li("Step Change"),
+                tags$li("Progressive Change"),
+                tags$li("Green Energy Exports")
+              )
+            ),
+            tags$td(
+              tags$ul(class = "mb-0 ps-3",
+                tags$li("Step Change"),
+                tags$li("Accelerated Transition"),
+                tags$li("Slower Growth")
+              )
+            )
+          ),
+          tags$tr(
+            tags$td(strong("No. of CDPs")),
+            tags$td("8 + counterfactual"),
+            tags$td("10 + counterfactual"),
+            tags$td("25 + counterfactual"),
+            tags$td("23 + counterfactual")
+          ),
+          tags$tr(
+            tags$td(strong("Optimal Development Path (ODP)")),
+            tags$td("DP1 (Central)"),
+            tags$td("CDP8 (Step Change)"),
+            tags$td("CDP14 (Step Change)"),
+            tags$td("CDP4 (Step Change)")
+          )
+        )
       ),
 
       hr(),
-      p(tags$em("Note: Scenario details vary by ISP release year. The above describes 2024 ISP scenarios.
-                Select different ISP sources in the Technology View to explore other scenario sets."))
+      p(tags$em("Note: The ISP 2018 is also available in this tool but used a different structure",
+                " (6 scenarios, single default pathway) and is excluded from the table above."))
+    ),
+    full_screen = TRUE
+  )
+}
+
+
+#' Generate CDP Tab Content
+#'
+#' @return A shiny card object with CDP content
+generate_cdp_content <- function() {
+  card(
+    card_header(
+      h3("Candidate Development Paths", style = "margin: 0;")
+    ),
+    card_body(
+      p("Each ISP release evaluates a set of Candidate Development Paths (CDPs).",
+        "Select an ISP source below to view the CDP summary table."),
+      selectInput("cdp_isp_source",
+                  "Select ISP source",
+                  choices = NULL,
+                  width = "300px"),
+      hr(),
+      gt_output("cdp_gt_table"),
+      hr(),
+      p(tags$em("Note: CDP descriptions were only available from ISP 2022 onwards.",
+                "There is no equivalent table for ISP 2018 or 2020."))
     ),
     full_screen = TRUE
   )

@@ -20,6 +20,7 @@ library(thematic)
 library(scales)
 library(glue)
 library(yaml)
+library(gt)
 
 
 
@@ -65,6 +66,53 @@ hist_gen_energy <- nem_historical_network_data |>
   rename(technology = coerced_tech_cat) |>
   left_join(util_table |> select(technology, dispatchable), by = "technology") |>
   mutate(technology = factor(technology, levels = util_table$technology))
+
+# Historical emissions (tonnes -> Mt CO2-e), aggregated by region and financial year
+hist_emissions <- nem_historical_network_data |>
+  filter(metric == "emissions") |>
+  mutate(
+    month          = month(period_start),
+    fy_year        = year(period_start),
+    financial_year = if_else(month >= 7L, fy_year + 1L, fy_year),
+    value_mt       = value / 1e6,
+    region         = str_remove(network_region, "1$")
+  ) |>
+  filter(financial_year >= 2010, financial_year <= 2025) |>
+  group_by(region, financial_year) |>
+  summarise(value_mt = sum(value_mt, na.rm = TRUE), .groups = "drop")
+
+# Historical emissions intensity (kg CO2-e / MWh), by region and financial year
+# Joins historical emissions (tonnes) with historical energy (GWh)
+hist_intensity <- {
+  h_emit <- nem_historical_network_data |>
+    filter(metric == "emissions") |>
+    mutate(
+      month          = month(period_start),
+      fy_year        = year(period_start),
+      financial_year = if_else(month >= 7L, fy_year + 1L, fy_year),
+      region         = str_remove(network_region, "1$")
+    ) |>
+    filter(financial_year >= 2010, financial_year <= 2025) |>
+    group_by(region, financial_year) |>
+    summarise(emissions_t = sum(value, na.rm = TRUE), .groups = "drop")
+
+  h_energy <- nem_historical_network_data |>
+    filter(metric == "energy") |>
+    mutate(
+      month          = month(period_start),
+      fy_year        = year(period_start),
+      financial_year = if_else(month >= 7L, fy_year + 1L, fy_year),
+      region         = str_remove(network_region, "1$")
+    ) |>
+    filter(financial_year >= 2010, financial_year <= 2025) |>
+    group_by(region, financial_year) |>
+    summarise(energy_gwh = sum(value / 1000, na.rm = TRUE), .groups = "drop")
+
+  h_emit |>
+    inner_join(h_energy, by = c("region", "financial_year")) |>
+    mutate(intensity_kg = emissions_t / energy_gwh) |>
+    select(region, financial_year, intensity_kg)
+}
 
 
 # Load brand configuration
@@ -164,6 +212,12 @@ ui <- tagList(
       nav_panel(
         title = "Scenario descriptions",
         generate_scenario_descriptions_content()
+      ),
+
+      # CDPs sub-tab
+      nav_panel(
+        title = "CDPs",
+        generate_cdp_content()
       )
     )
   ),
@@ -401,9 +455,9 @@ ui <- tagList(
         nav_panel(
           title = "Total emissions",
           card(
-            card_header("Total emissions (MtCO2e) per year"),
+            card_header("Total emissions (Mt CO2-e) per year, by region"),
             card_body(
-              "Chart content placeholder"
+              plotlyOutput("emissions_total_plot", height = "500px")
             ),
             full_screen = TRUE,
             height = "100%"
@@ -413,9 +467,21 @@ ui <- tagList(
         nav_panel(
           title = "Annual change",
           card(
-            card_header("Annual change in emissions (MtCO2e)"),
+            card_header("Annual change in emissions (Mt CO2-e) per year, by region"),
             card_body(
-              "Chart content placeholder"
+              plotlyOutput("emissions_change_plot", height = "500px")
+            ),
+            full_screen = TRUE,
+            height = "100%"
+          )
+        ),
+
+        nav_panel(
+          title = "Emissions intensity",
+          card(
+            card_header("Emissions intensity (kg CO2-e / MWh) per year, by region"),
+            card_body(
+              plotlyOutput("emissions_intensity_plot", height = "500px")
             ),
             full_screen = TRUE,
             height = "100%"
@@ -553,9 +619,9 @@ ui <- tagList(
             value = FALSE
           ),
           p(
-            "When enabled, historical NEM generation data from OpenNEM ",
-            "(FY2010\u2013FY2025) is overlaid on generation output charts ",
-            "alongside ISP projections.",
+            "When enabled, historical NEM data from OpenNEM ",
+            "(FY2010\u2013FY2025) is overlaid on generation output and ",
+            "emissions charts alongside ISP projections.",
             class = "text-muted mt-2"
           ),
           conditionalPanel(
@@ -688,9 +754,104 @@ server <- function(input, output, session){
                       choices = filtered_storage_types,
                       selected = filtered_storage_types)
   })
-  
-  
-  
+
+  #----- G. CDP table dropdown and GT render -----
+
+  updateSelectInput(session, "cdp_isp_source",
+                    choices = cdp_tables$isp_source,
+                    selected = "2024_final")
+
+  output$cdp_gt_table <- render_gt({
+    req(input$cdp_isp_source)
+
+    tbl_data <- cdp_tables |>
+      filter(isp_source == input$cdp_isp_source) |>
+      pull(cdp_table) |>
+      pluck(1)
+
+    gt_tbl <- tbl_data |>
+      gt() |>
+      sub_missing(missing_text = "") |>
+      tab_options(
+        table.font.size = px(13),
+        heading.title.font.size = px(16),
+        column_labels.font.weight = "bold",
+        column_labels.background.color = "#263A68",
+        table.width = pct(100)
+      ) |>
+      tab_style(
+        style = cell_text(color = "white"),
+        locations = cells_column_labels()
+      )
+
+    # Style individual "Actionable" cells per column
+    for (col_name in names(tbl_data)) {
+      actionable_rows <- which(tbl_data[[col_name]] == "Actionable" & !is.na(tbl_data[[col_name]]))
+      if (length(actionable_rows) > 0) {
+        gt_tbl <- gt_tbl |>
+          tab_style(
+            style = list(
+              cell_fill(color = "#e8f5e9"),
+              cell_text(color = "#2e7d32", weight = "bold")
+            ),
+            locations = cells_body(columns = !!col_name, rows = actionable_rows)
+          )
+      }
+    }
+
+    gt_tbl
+  })
+
+  #----- H. Emissions dropdowns -----
+
+  # Emissions source
+  emissions_sources <- unique(isp_emissions$source)
+  updateSelectInput(session, "emissions_source",
+                    choices = emissions_sources,
+                    selected = if ("2024_final" %in% emissions_sources) "2024_final" else emissions_sources[1])
+
+  # Emissions scenario (depends on source)
+  observeEvent(input$emissions_source, {
+    filtered <- isp_emissions |>
+      filter(source == input$emissions_source) |>
+      pull(scenario) |> unique()
+    updateSelectInput(session, "emissions_scenario",
+                      choices = filtered,
+                      selected = if ("step change" %in% filtered) "step change" else filtered[1])
+    updateSelectInput(session, "emissions_pathway", choices = NULL)
+  })
+
+  # Emissions pathway (depends on scenario + ODP toggle)
+  observeEvent(c(input$emissions_scenario, input$`emissions-show-only-odp`), {
+    req(input$emissions_source, input$emissions_scenario)
+    filtered <- isp_emissions |>
+      filter(source == input$emissions_source,
+             scenario == input$emissions_scenario) |>
+      pull(cdp) |> unique()
+
+    if (isTRUE(input$`emissions-show-only-odp`)) {
+      odp_pathway <- odp_table |>
+        filter(isp_source == input$emissions_source) |>
+        pull(odp)
+      if (length(odp_pathway) > 0) {
+        filtered <- intersect(filtered, odp_pathway)
+      }
+    }
+
+    filtered <- stringr::str_sort(filtered, numeric = TRUE)
+    selected <- if (length(filtered) > 0) filtered[1] else NULL
+    updateSelectInput(session, "emissions_pathway",
+                      choices = filtered, selected = selected)
+  })
+
+  # Emissions region
+  emissions_regions <- isp_emissions |>
+    filter(!is.na(region), region != "NEM") |>
+    pull(region) |> unique()
+  updatePickerInput(session, "emissions_region",
+                    choices = emissions_regions,
+                    selected = emissions_regions)
+
 
   # =---- Download handlers -----------------------------------------------------
 
@@ -743,6 +904,9 @@ server <- function(input, output, session){
         "chart_data_storage_capacity" = chart_data_storage_capacity(),
         "chart_data_storage_output" = chart_data_storage_output(),
         "chart_data_storage_capacity_change" = chart_data_storage_capacity_change(),
+        "chart_data_emissions" = chart_data_emissions(),
+        "chart_data_emissions_change" = chart_data_emissions_change(),
+        "chart_data_emissions_intensity" = chart_data_emissions_intensity(),
         NULL  # default case
       )
 
@@ -807,6 +971,9 @@ server <- function(input, output, session){
         "chart_data_storage_capacity" = chart_data_storage_capacity(),
         "chart_data_storage_output" = chart_data_storage_output(),
         "chart_data_storage_capacity_change" = chart_data_storage_capacity_change(),
+        "chart_data_emissions" = chart_data_emissions(),
+        "chart_data_emissions_change" = chart_data_emissions_change(),
+        "chart_data_emissions_intensity" = chart_data_emissions_intensity(),
         NULL
       )
 
@@ -862,6 +1029,21 @@ server <- function(input, output, session){
           scenario = input$scenario,
           source = input$source,
           storage_util_table = storage_util_table
+        ),
+        "emissions_total" = generate_emissions_total_chart(
+          data = chart_data,
+          scenario = input$emissions_scenario,
+          source = input$emissions_source
+        ),
+        "emissions_change" = generate_emissions_change_chart(
+          data = chart_data,
+          scenario = input$emissions_scenario,
+          source = input$emissions_source
+        ),
+        "emissions_intensity" = generate_emissions_intensity_chart(
+          data = chart_data,
+          scenario = input$emissions_scenario,
+          source = input$emissions_source
         ),
         NULL
       )
@@ -1480,6 +1662,219 @@ server <- function(input, output, session){
     }
   )
 
+
+
+  # =---- Emissions download handlers --------------------------------------------
+
+  output$download_emissions_chart_data <- downloadHandler(
+    filename = function() {
+      req(input$emissions_source, input$emissions_scenario)
+      source_part <- gsub("_", "-", input$emissions_source)
+      scenario_part <- gsub(" ", "-", tolower(input$emissions_scenario))
+      paste0("isp_", source_part, "_", scenario_part, "_emissions_total_",
+             format(Sys.Date(), "%Y%m%d"), ".csv")
+    },
+    content = function(file) {
+      req(chart_data_emissions())
+      write.csv(chart_data_emissions(), file, row.names = FALSE)
+    }
+  )
+
+  output$download_emissions_chart_image <- downloadHandler(
+    filename = function() {
+      req(input$emissions_source, input$emissions_scenario)
+      source_part <- gsub("_", "-", input$emissions_source)
+      scenario_part <- gsub(" ", "-", tolower(input$emissions_scenario))
+      paste0("isp_", source_part, "_", scenario_part, "_emissions_total_",
+             format(Sys.Date(), "%Y%m%d"), ".svg")
+    },
+    content = function(file) {
+      req(chart_data_emissions())
+      p <- generate_emissions_total_chart(
+        data = chart_data_emissions(),
+        scenario = input$emissions_scenario,
+        source = input$emissions_source
+      )
+      ggsave(file, plot = p, device = "svg", width = 12, height = 7, units = "in")
+    }
+  )
+
+  # =---- Emissions charts -------------------------------------------------------
+
+  # Reactive data for emissions total chart
+  chart_data_emissions <- reactive({
+    req(input$emissions_source, input$emissions_scenario,
+        input$emissions_pathway, input$emissions_region)
+
+    isp_data <- isp_emissions |>
+      filter(source == input$emissions_source,
+             scenario == input$emissions_scenario,
+             cdp == input$emissions_pathway,
+             region %in% input$emissions_region,
+             !is.na(region), region != "NEM") |>
+      group_by(region, year, scenario, source, cdp, year_ending, odp) |>
+      summarise(value = sum(value, na.rm = TRUE), .groups = "drop")
+
+    if (!isTRUE(input$show_historical)) return(isp_data)
+
+    # Historical emissions leg
+    hist_data <- hist_emissions |>
+      filter(region %in% input$emissions_region) |>
+      group_by(region, year = financial_year) |>
+      summarise(value = sum(value_mt, na.rm = TRUE), .groups = "drop") |>
+      mutate(
+        scenario    = "historical",
+        source      = "opennem",
+        cdp         = "actual",
+        year_ending = as.Date(paste0(year, "-06-30")),
+        odp         = FALSE
+      )
+
+    # Truncation to avoid double-counting
+    isp_start_year <- min(isp_data$year, na.rm = TRUE)
+    hist_last_year <- max(hist_data$year, na.rm = TRUE)
+
+    if (isTRUE(input$truncate_side == "truncate_projection")) {
+      isp_data <- isp_data |> filter(year > hist_last_year)
+    } else {
+      hist_data <- hist_data |> filter(year < isp_start_year)
+    }
+
+    bind_rows(hist_data, isp_data)
+  })
+
+  # Emissions total plot
+  emissions_total_plot <- reactive({
+    d <- chart_data_emissions()
+    p <- generate_emissions_total_chart(
+      data = d,
+      scenario = input$emissions_scenario,
+      source = input$emissions_source
+    )
+    return(ggplotly(p, tooltip = c("region", "value")) |>
+             plotly::config(displayModeBar = FALSE))
+  })
+
+  output$emissions_total_plot <- renderPlotly(emissions_total_plot())
+
+  # Reactive data for emissions annual change chart
+  chart_data_emissions_change <- reactive({
+    d <- chart_data_emissions()
+
+    d |>
+      arrange(region, year) |>
+      group_by(region) |>
+      mutate(change = value - lag(value)) |>
+      ungroup() |>
+      filter(!is.na(change))
+  })
+
+  # Emissions change plot
+  emissions_change_plot <- reactive({
+    d <- chart_data_emissions_change()
+    p <- generate_emissions_change_chart(
+      data = d,
+      scenario = input$emissions_scenario,
+      source = input$emissions_source
+    )
+    return(ggplotly(p, tooltip = c("region", "change")) |>
+             plotly::config(displayModeBar = FALSE))
+  })
+
+  output$emissions_change_plot <- renderPlotly(emissions_change_plot())
+
+  # Reactive data for emissions intensity chart
+  # Aggregates across all selected regions then calculates intensity
+  # intensity = (total Mt CO2-e / total GWh) * 1e3 = kg CO2-e / MWh
+  chart_data_emissions_intensity <- reactive({
+    req(input$emissions_source, input$emissions_scenario,
+        input$emissions_pathway, input$emissions_region)
+
+    # ISP emissions summed across selected regions
+    emit <- isp_emissions |>
+      filter(source == input$emissions_source,
+             scenario == input$emissions_scenario,
+             cdp == input$emissions_pathway,
+             region %in% input$emissions_region,
+             !is.na(region), region != "NEM") |>
+      group_by(year, scenario, source, cdp, year_ending, odp) |>
+      summarise(emissions_mt = sum(value, na.rm = TRUE), .groups = "drop")
+
+    # ISP generation output summed across selected regions
+    gen <- isp_generation_output |>
+      filter(source == input$emissions_source,
+             scenario == input$emissions_scenario,
+             cdp == input$emissions_pathway,
+             region %in% input$emissions_region) |>
+      group_by(year) |>
+      summarise(generation_gwh = sum(value, na.rm = TRUE), .groups = "drop")
+
+    isp_data <- emit |>
+      inner_join(gen, by = "year") |>
+      mutate(intensity = (emissions_mt / generation_gwh) * 1e6) |>
+      filter(is.finite(intensity))
+
+    isp_data <- isp_data |>
+      select(year, source, intensity)
+
+    if (!isTRUE(input$show_historical)) return(isp_data)
+
+    # Historical intensity from raw totals for selected regions
+    h_emit <- nem_historical_network_data |>
+      filter(metric == "emissions",
+             str_remove(network_region, "1$") %in% input$emissions_region) |>
+      mutate(financial_year = if_else(month(period_start) >= 7L,
+                                      year(period_start) + 1L,
+                                      year(period_start))) |>
+      filter(financial_year >= 2010, financial_year <= 2025) |>
+      group_by(financial_year) |>
+      summarise(emissions_t = sum(value, na.rm = TRUE), .groups = "drop")
+
+    h_energy <- nem_historical_network_data |>
+      filter(metric == "energy",
+             str_remove(network_region, "1$") %in% input$emissions_region) |>
+      mutate(financial_year = if_else(month(period_start) >= 7L,
+                                      year(period_start) + 1L,
+                                      year(period_start))) |>
+      filter(financial_year >= 2010, financial_year <= 2025) |>
+      group_by(financial_year) |>
+      summarise(energy_gwh = sum(value / 1000, na.rm = TRUE), .groups = "drop")
+
+    hist_data <- h_emit |>
+      inner_join(h_energy, by = "financial_year") |>
+      mutate(
+        year      = financial_year,
+        intensity = emissions_t / energy_gwh,
+        source    = "opennem"
+      ) |>
+      select(year, source, intensity)
+
+    # Truncation
+    isp_start_year <- min(isp_data$year, na.rm = TRUE)
+    hist_last_year <- max(hist_data$year, na.rm = TRUE)
+
+    if (isTRUE(input$truncate_side == "truncate_projection")) {
+      isp_data <- isp_data |> filter(year > hist_last_year)
+    } else {
+      hist_data <- hist_data |> filter(year < isp_start_year)
+    }
+
+    bind_rows(hist_data, isp_data)
+  })
+
+  # Emissions intensity plot
+  emissions_intensity_plot <- reactive({
+    d <- chart_data_emissions_intensity()
+    p <- generate_emissions_intensity_chart(
+      data = d,
+      scenario = input$emissions_scenario,
+      source = input$emissions_source
+    )
+    return(ggplotly(p, tooltip = c("year", "intensity")) |>
+             plotly::config(displayModeBar = FALSE))
+  })
+
+  output$emissions_intensity_plot <- renderPlotly(emissions_intensity_plot())
 
 
 } # END SERVER BRACE

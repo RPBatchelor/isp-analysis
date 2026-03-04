@@ -88,7 +88,22 @@ get_active_tab_info <- function(input) {
     result$chart_type <- NULL
 
   } else if (main_tab == "emissions_view") {
-    result$chart_type <- NULL
+    sub_tab <- input$emissions_tabs
+    result$sub_tab <- sub_tab
+
+    if (!is.null(sub_tab) && sub_tab == "Total emissions") {
+      result$chart_type <- "emissions_total"
+      result$data_reactive <- "chart_data_emissions"
+      result$plot_reactive <- "emissions_total_plot"
+    } else if (!is.null(sub_tab) && sub_tab == "Annual change") {
+      result$chart_type <- "emissions_change"
+      result$data_reactive <- "chart_data_emissions_change"
+      result$plot_reactive <- "emissions_change_plot"
+    } else if (!is.null(sub_tab) && sub_tab == "Emissions intensity") {
+      result$chart_type <- "emissions_intensity"
+      result$data_reactive <- "chart_data_emissions_intensity"
+      result$plot_reactive <- "emissions_intensity_plot"
+    }
 
   } else if (main_tab == "compare_scenarios") {
     result$chart_type <- NULL
