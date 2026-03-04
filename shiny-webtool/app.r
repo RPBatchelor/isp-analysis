@@ -124,7 +124,20 @@ ui <- tagList(
   page_navbar(
     id = "main_navbar",
     title = NULL,
-    theme = bs_theme(brand = "brand/_brand.yml"),
+    theme = bs_theme(
+      bg = "#FFFFFF",
+      fg = "#171717",
+      primary = "#263A68",
+      secondary = "#8BC34E",
+      success = "#12B57A",
+      info = "#0EC0C0",
+      warning = "#FFC804",
+      danger = "#171717",
+      base_font = "Aptos, sans-serif",
+      heading_font = "Aptos, sans-serif",
+      font_scale = 0.9,
+      `navbar-bg` = "#263A68"
+    ),
 
 
     # Home page - first tab with sub-tabs
@@ -225,14 +238,6 @@ ui <- tagList(
                            width = "100%",
                            dropboxWrapper = "body"),
 
-        checkboxInput("show_dispatchable",
-                      "Show dispatchable capacity",
-                      value = FALSE),
-
-        checkboxInput("show_total_capacity",
-                      "Show total capacity",
-                      value = FALSE),
-        
         h4("Download data"),
 
         downloadButton("download_chart_data",
@@ -551,7 +556,7 @@ ui <- tagList(
             "When enabled, historical NEM generation data from OpenNEM ",
             "(FY2010\u2013FY2025) is overlaid on generation output charts ",
             "alongside ISP projections.",
-            class = "text-muted small mt-2"
+            class = "text-muted mt-2"
           ),
           conditionalPanel(
             condition = "input.show_historical == true",
@@ -571,8 +576,19 @@ ui <- tagList(
               tags$br(),
               tags$b("Truncate projection:"),
               " ISP projection starts after the last historical year.",
-              class = "text-muted small mt-1"
+              class = "text-muted mt-1"
             )
+          ),
+          hr(class = "mt-3 mb-2"),
+          input_switch(
+            id    = "show_dispatchable",
+            label = "Show dispatchable capacity",
+            value = FALSE
+          ),
+          input_switch(
+            id    = "show_total_capacity",
+            label = "Show total capacity",
+            value = FALSE
           )
         )
       )
