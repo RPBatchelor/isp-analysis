@@ -44,6 +44,11 @@ generate_welcome_content <- function() {
           p("The author makes no guarantees or warranties for the accuracy of the data contained herein"),
           hr(),
           p(em("Select a tab above to begin exploring the ISP data.")),
+          p(
+            icon("github"),
+            " View the source code on ",
+            tags$a("GitHub", href = "https://github.com/RPBatchelor/isp-analysis", target = "_blank"),
+          ),
           p(em("Last updated: 23 November 2025"))
         )
       ),
